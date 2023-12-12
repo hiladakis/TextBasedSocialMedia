@@ -39,7 +39,7 @@ public class UserPostController
                 ctx.status(statusOk);
                 ctx.json(userPostResponse.toString());
             }
-        } catch (Throwable t) {
+        } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)

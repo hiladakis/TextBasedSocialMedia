@@ -40,7 +40,7 @@ public class PostCommentController
                 ctx.status(statusOk);
                 ctx.json(postCommentResponse.toString());
             }
-        } catch (Throwable t) {
+        } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)

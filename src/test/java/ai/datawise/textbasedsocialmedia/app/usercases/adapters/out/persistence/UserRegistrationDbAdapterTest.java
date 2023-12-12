@@ -30,7 +30,7 @@ class UserRegistrationDbAdapterTest
         try{
             entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
         }
-        catch(Throwable t){
+        catch(Exception  t){
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)
@@ -58,7 +58,7 @@ class UserRegistrationDbAdapterTest
                 userRegistrationDbAdapter.setEntityManagerFactory(entityManagerFactory);
                 user = new User("giannis.hiladakis@gmail.com","15984","Free");
             }
-            catch(Throwable t)
+            catch(Exception  t)
             {
                 logger.error(t + Arrays.asList(t.getStackTrace())
                         .stream()
@@ -92,7 +92,7 @@ class UserRegistrationDbAdapterTest
 
 
     @Test
-    void storeRegisteredUserIntegrationSuccessTest()
+    void storeRegisteredUserIntegrationSuccessTest() throws Exception
     {
         userRegistrationDbAdapter.storeRegisteredUser(user);
         try(EntityManager em = userRegistrationDbAdapter.getEntityManagerFactory().createEntityManager())

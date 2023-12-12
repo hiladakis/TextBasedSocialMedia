@@ -48,22 +48,15 @@ public class UserLoginDbAdapter implements UserLoginPort
             trans.commit();
             entityManager.close();
         }
-        catch (Throwable t)
+        catch (Exception t)
         {
-            if ( trans != null && trans.isActive())
-            {
+            if (trans != null && trans.isActive()) {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
         return null;
     }

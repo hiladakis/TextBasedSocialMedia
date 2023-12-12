@@ -21,7 +21,7 @@ class UserRegistrationServiceTest
     private UserRegistrationDbAdapter userRegistrationDbAdapter;
 
     @Test
-    void registerUserTest()
+    void registerUserTest() throws Exception
     {
         UserRegistrationCommand newUserRegistrationCommand = new UserRegistrationCommand("giannis@example.com", "12345",
                 "Free");

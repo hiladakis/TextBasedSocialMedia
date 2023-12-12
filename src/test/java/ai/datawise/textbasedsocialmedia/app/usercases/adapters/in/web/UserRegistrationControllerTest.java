@@ -37,7 +37,7 @@ class UserRegistrationControllerTest {
     private static final Logger logger = LogManager.getLogger(UserRegistrationControllerTest.class);
 
     @Test
-    void userRegistrationControllerIntegrationSuccessTest()
+    void userRegistrationControllerIntegrationSuccessTest() throws Exception
     {
         //setUp
         UserRegistrationCommand newUserRegistrationCommand = new UserRegistrationCommand("giannis@example.com", "12345",
@@ -86,7 +86,7 @@ class UserRegistrationControllerTest {
     }
 
     @Test
-    void userRegistrationControllerIntegrationFailureTest()
+    void userRegistrationControllerIntegrationFailureTest() throws Exception
     {
         //setUp
         UserRegistrationCommand newUserRegistrationCommand = new UserRegistrationCommand("giannis@example.com", "12345",
@@ -134,7 +134,7 @@ class UserRegistrationControllerTest {
     }
 
     @Test
-    void userRegistrationControllerInputFailureTest()
+    void userRegistrationControllerInputFailureTest() throws Exception
     {
         //setUp
         String username = "giannis";

@@ -28,7 +28,7 @@ public class PostCommentDbAdapter implements PostCommentPort
     private EntityManagerFactory entityManagerFactory = null;
     private static final Logger logger = LogManager.getLogger(PostCommentDbAdapter.class);
     @Override
-    public boolean isPremiumUser(int user_id)
+    public boolean isPremiumUser(int user_id) throws Exception
     {
         EntityManager entityManager = null;
         try
@@ -44,24 +44,18 @@ public class PostCommentDbAdapter implements PostCommentPort
                 return true;
             }
         }
-        catch (Throwable t)
-        {
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
+        catch (Exception  t)
         {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
         return false;
     }
 
     @Override
-    public int getPostCommentsNumber(int post_id, int user_id)
+    public int getPostCommentsNumber(int post_id, int user_id) throws Exception
     {
         EntityManager entityManager = null;
         try
@@ -83,24 +77,17 @@ public class PostCommentDbAdapter implements PostCommentPort
 
             return postCommentsNumber;
         }
-        catch (Throwable t)
-        {
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
+        catch (Exception  t)
         {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return -1;
     }
 
     @Override
-    public PostCommentResponse storePostComment(PostComment postComment)
+    public PostCommentResponse storePostComment(PostComment postComment) throws Exception
     {
         EntityManager entityManager = null;
         EntityTransaction trans = null;
@@ -129,24 +116,17 @@ public class PostCommentDbAdapter implements PostCommentPort
             logger.info("postCommentsEntity id : "+postCommentsEntity.getId());
             return new PostCommentResponse(postCommentsEntity.getId(),postCommentsEntity.getCommentDate());
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return null;
     }
 
     private PostCommentsEntity getPostCommentsEntityFromPostComment(PostComment postComment, String username)

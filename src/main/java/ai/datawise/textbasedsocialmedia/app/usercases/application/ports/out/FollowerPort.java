@@ -4,6 +4,6 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.F
 
 public interface FollowerPort
 {
-    public boolean storeFollower(FollowUser followUser);
-    public boolean deleteFollower(FollowUser followUser);
+    public boolean storeFollower(FollowUser followUser) throws Exception;
+    public boolean deleteFollower(FollowUser followUser) throws Exception;
 }

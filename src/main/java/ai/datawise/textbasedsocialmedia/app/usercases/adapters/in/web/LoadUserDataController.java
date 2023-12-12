@@ -32,7 +32,7 @@ public class LoadUserDataController
             Gson gson = new Gson();
             ctx.json(gson.toJson(followerPostViewList));
             ctx.status(statusOk);
-        } catch (Throwable t)
+        } catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -54,7 +54,7 @@ public class LoadUserDataController
             Gson gson = new Gson();
             ctx.json(gson.toJson(userPostWithLatestCommentsView));
             ctx.status(statusOk);
-        } catch (Throwable t)
+        } catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -75,7 +75,7 @@ public class LoadUserDataController
             Gson gson = new Gson();
             ctx.json(gson.toJson(postCommentViewList));
             ctx.status(statusOk);
-        } catch (Throwable t)
+        } catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -96,7 +96,7 @@ public class LoadUserDataController
             Gson gson = new Gson();
             ctx.json(gson.toJson(postCommentViewList));
             ctx.status(statusOk);
-        } catch (Throwable t)
+        } catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -116,7 +116,7 @@ public class LoadUserDataController
             Gson gson = new Gson();
             ctx.json(gson.toJson(followerViewList));
             ctx.status(statusOk);
-        } catch (Throwable t)
+        } catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -137,7 +137,7 @@ public class LoadUserDataController
             Gson gson = new Gson();
             ctx.json(gson.toJson(followingViewList));
             ctx.status(statusOk);
-        } catch (Throwable t)
+        } catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -156,7 +156,7 @@ public class LoadUserDataController
             Gson gson = new Gson();
             ctx.json(gson.toJson(userViewList));
             ctx.status(statusOk);
-        } catch (Throwable t)
+        } catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()

@@ -33,7 +33,7 @@ class UserLoginDbAdapterTest
         try{
             entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
         }
-        catch(Throwable t){
+        catch(Exception  t){
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)
@@ -54,7 +54,7 @@ class UserLoginDbAdapterTest
     }
 
     @BeforeEach
-    void setUp(TestInfo info)
+    void setUp(TestInfo info) throws Exception
     {
         if(info.getDisplayName().equals("loginUserIntegrationSuccessTest()"))
         {
@@ -70,7 +70,7 @@ class UserLoginDbAdapterTest
                 userRegistrationDbAdapter.storeRegisteredUser(user);
 
             }
-            catch(Throwable t)
+            catch(Exception  t)
             {
                 logger.error(t + Arrays.asList(t.getStackTrace())
                         .stream()
@@ -92,7 +92,7 @@ class UserLoginDbAdapterTest
                 User user = new User("irene@gmail.com","15985","Free");
                 userRegistrationDbAdapter.storeRegisteredUser(user);
             }
-            catch(Throwable t)
+            catch(Exception  t)
             {
                 logger.error(t + Arrays.asList(t.getStackTrace())
                         .stream()
@@ -129,7 +129,7 @@ class UserLoginDbAdapterTest
                 em.flush();
                 entityTransaction.commit();
             }
-            catch (Throwable e)
+            catch (Exception  e)
             {
                 if ( entityTransaction != null && entityTransaction.isActive())
                 {
@@ -153,7 +153,7 @@ class UserLoginDbAdapterTest
                 em.flush();
                 entityTransaction.commit();
             }
-            catch (Throwable e)
+            catch (Exception  e)
             {
                 if ( entityTransaction != null && entityTransaction.isActive())
                 {
@@ -188,12 +188,12 @@ class UserLoginDbAdapterTest
         LoginResponse loginResponse = userLoginDbAdapter.loginUser(loginUser);
         try(EntityManager em = userLoginDbAdapter.getEntityManagerFactory().createEntityManager())
         {
-            Throwable throwable = assertThrows(Throwable.class, () -> {
+            Exception  Exception  = assertThrows(Exception .class, () -> {
                 String queryStr = "SELECT id FROM giannis.authenticated_users WHERE username='"+loginUser.getUsername()+"'";
                 em.createNativeQuery(queryStr ).getSingleResult();
             });
             String expectedMessage = "No result found for query";
-            assertTrue(throwable.getMessage().contains(expectedMessage));
+            assertTrue(Exception .getMessage().contains(expectedMessage));
         }
         assertNull(loginResponse);
     }

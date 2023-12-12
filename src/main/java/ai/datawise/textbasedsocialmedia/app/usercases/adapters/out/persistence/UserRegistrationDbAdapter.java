@@ -11,10 +11,6 @@ import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 public class UserRegistrationDbAdapter implements UserRegistrationPort
 {
     @Setter
@@ -23,7 +19,7 @@ public class UserRegistrationDbAdapter implements UserRegistrationPort
     private static final Logger logger = LogManager.getLogger(UserRegistrationDbAdapter.class);
 
     @Override
-    public boolean storeRegisteredUser(User user)
+    public boolean storeRegisteredUser(User user) throws Exception
     {
         RegisteredUsersEntity usersEntity = getRegisteredUsersEntityFromUser(user);
         EntityManager entityManager = null;
@@ -37,24 +33,17 @@ public class UserRegistrationDbAdapter implements UserRegistrationPort
             trans.commit();
             return true;
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return false;
     }
 
     private RegisteredUsersEntity getRegisteredUsersEntityFromUser(User user)

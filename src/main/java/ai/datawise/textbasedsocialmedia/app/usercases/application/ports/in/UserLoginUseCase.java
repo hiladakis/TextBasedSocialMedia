@@ -5,5 +5,5 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.in.model
 
 public interface UserLoginUseCase
 {
-    public LoginResponse loginUser(UserLoginCommand command);
+    public LoginResponse loginUser(UserLoginCommand command) throws Exception;
 }

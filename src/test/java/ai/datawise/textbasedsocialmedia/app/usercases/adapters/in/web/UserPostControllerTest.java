@@ -48,7 +48,7 @@ class UserPostControllerTest
     private static final Logger logger = LogManager.getLogger(UserPostControllerTest.class);
 
     @Test
-    void userPostControllerMakePostSuccessTest() throws IOException, ParseException
+    void userPostControllerMakePostSuccessTest() throws Exception
     {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.S");
         Date date = simpleDateFormat.parse(new Timestamp(System.currentTimeMillis()).toString());

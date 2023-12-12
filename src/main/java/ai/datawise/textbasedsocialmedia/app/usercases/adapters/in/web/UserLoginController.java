@@ -7,6 +7,7 @@ import ai.datawise.textbasedsocialmedia.app.utils.deserializers.UserLoginCommand
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.javalin.http.Context;
+import jakarta.validation.ConstraintViolationException;
 import lombok.Value;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,7 +40,7 @@ public class UserLoginController
                 ctx.status(statusOk);
                 ctx.json(loginResponse.toString());
             }
-        } catch (Throwable t) {
+        } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)

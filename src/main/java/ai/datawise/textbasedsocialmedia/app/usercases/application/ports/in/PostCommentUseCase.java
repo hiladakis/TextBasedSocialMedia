@@ -5,5 +5,5 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.in.model
 
 public interface PostCommentUseCase
 {
-    public PostCommentResponse postComment(PostCommentCommand postCommentCommand);
+    public PostCommentResponse postComment(PostCommentCommand postCommentCommand) throws Exception;
 }

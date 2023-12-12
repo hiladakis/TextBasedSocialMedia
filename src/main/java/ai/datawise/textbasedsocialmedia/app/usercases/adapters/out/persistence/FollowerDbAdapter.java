@@ -24,7 +24,7 @@ public class FollowerDbAdapter implements FollowerPort
     private static final Logger logger = LogManager.getLogger(FollowerDbAdapter.class);
 
     @Override
-    public boolean storeFollower(FollowUser followUser) {
+    public boolean storeFollower(FollowUser followUser) throws Exception{
         EntityManager entityManager = null;
         EntityTransaction trans = null;
         try
@@ -53,28 +53,23 @@ public class FollowerDbAdapter implements FollowerPort
             logger.info("followerUsersEntity id : "+followersEntity.getId());
             return true;
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
+
             if (entityManager != null) {
                 entityManager.close();
             }
+
+            throw t;
         }
-        return false;
     }
 
     @Override
-    public boolean deleteFollower(FollowUser followUser) {
+    public boolean deleteFollower(FollowUser followUser) throws Exception {
         EntityManager entityManager = null;
         EntityTransaction trans = null;
         try
@@ -103,24 +98,17 @@ public class FollowerDbAdapter implements FollowerPort
 
             return true;
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return false;
     }
 
     private FollowersEntity getFollowersEntity(FollowUser followUser, EntityManager entityManager)

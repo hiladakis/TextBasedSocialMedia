@@ -48,7 +48,7 @@ class PostCommentControllerTest
     private static final Logger logger = LogManager.getLogger(PostCommentControllerTest.class);
 
     @Test
-    void postCommentControllerPostCommentSuccessTest() throws IOException, ParseException
+    void postCommentControllerPostCommentSuccessTest() throws Exception
     {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.S");
         Date date = simpleDateFormat.parse(new Timestamp(System.currentTimeMillis()).toString());
@@ -109,7 +109,7 @@ class PostCommentControllerTest
     }
 
     @Test
-    void postCommentControllerPostCommentLimitExceededTest()
+    void postCommentControllerPostCommentLimitExceededTest() throws Exception
     {
         PostCommentCommand newPostCommentCommand = new PostCommentCommand(2, 1,
                 "What a nice post you made there!");

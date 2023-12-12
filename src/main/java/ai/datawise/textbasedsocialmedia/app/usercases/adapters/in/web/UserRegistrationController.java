@@ -39,7 +39,7 @@ public class UserRegistrationController
                 ctx.status(statusOk);
             }
         }
-        catch( Throwable t){
+        catch( Exception  t){
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)

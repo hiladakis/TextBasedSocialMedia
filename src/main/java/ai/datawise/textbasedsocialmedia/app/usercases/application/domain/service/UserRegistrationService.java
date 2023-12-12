@@ -10,7 +10,7 @@ public class UserRegistrationService implements UserRegistrationUseCase
 {
     private final UserRegistrationPort userRegistrationPort;
     @Override
-    public boolean registerUser(UserRegistrationCommand command)
+    public boolean registerUser(UserRegistrationCommand command) throws Exception
     {
         return(userRegistrationPort.storeRegisteredUser(command.getUser()));
     }

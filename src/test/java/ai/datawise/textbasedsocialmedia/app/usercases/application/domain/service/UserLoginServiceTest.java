@@ -21,7 +21,7 @@ class UserLoginServiceTest
     private UserLoginDbAdapter userLoginDbAdapter;
 
     @Test
-    void loginUserSuccessTest()
+    void loginUserSuccessTest() throws Exception
     {
         LoginResponse loginResponse = new LoginResponse(1,"giannis@example.com","Free");
         UserLoginCommand userLoginCommand = new UserLoginCommand("giannis@example.com", "12345");
@@ -39,7 +39,7 @@ class UserLoginServiceTest
     }
 
     @Test
-    void loginUserFailureTest()
+    void loginUserFailureTest() throws Exception
     {
         UserLoginCommand userLoginCommand = new UserLoginCommand("giannis@example.com", "12345");
         LoginUser loginUser = userLoginCommand.getLoginUser();

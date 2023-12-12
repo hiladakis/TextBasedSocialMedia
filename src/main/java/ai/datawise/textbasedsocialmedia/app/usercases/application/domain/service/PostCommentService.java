@@ -15,7 +15,7 @@ public class PostCommentService implements PostCommentUseCase
     private static final int freeUsersAllowedCommentsPerPost = 5;
 
     @Override
-    public PostCommentResponse postComment(PostCommentCommand postCommentCommand)
+    public PostCommentResponse postComment(PostCommentCommand postCommentCommand) throws Exception
     {
         if(isUserAllowedToPostComment(postCommentPort.isPremiumUser(postCommentCommand.getUserId()),
                 postCommentPort.getPostCommentsNumber(postCommentCommand.getPostId(), postCommentCommand.getUserId()),

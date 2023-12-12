@@ -25,7 +25,7 @@ public class MainApp {
             InputControllerEndPoints.generateFollowerEndPoint();
             InputControllerEndPoints.generateLoadUserDataControllerEndPoints();
         }
-        catch(Throwable t)
+        catch(Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()

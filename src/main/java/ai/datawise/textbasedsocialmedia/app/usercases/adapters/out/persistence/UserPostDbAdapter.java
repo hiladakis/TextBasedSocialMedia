@@ -27,7 +27,7 @@ public class UserPostDbAdapter implements UserPostPort
     private EntityManagerFactory entityManagerFactory = null;
 
     @Override
-    public boolean isPremiumUser(int user_id)
+    public boolean isPremiumUser(int user_id) throws Exception
     {
         EntityManager entityManager = null;
         try
@@ -43,24 +43,18 @@ public class UserPostDbAdapter implements UserPostPort
                 return true;
             }
         }
-        catch (Throwable t)
-        {
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
+        catch (Exception  t)
         {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
         return false;
     }
 
     @Override
-    public UserPostResponse storePost(UserPost userPost)
+    public UserPostResponse storePost(UserPost userPost) throws Exception
     {
         EntityManager entityManager = null;
         EntityTransaction trans = null;
@@ -86,24 +80,17 @@ public class UserPostDbAdapter implements UserPostPort
             return (new UserPostResponse(userPostsEntity.getId()
                     ,userPostsEntity.getPostDate()));
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return null;
     }
 
     private UserPostsEntity getUserPostsEntityFromUserPost(UserPost userPost)

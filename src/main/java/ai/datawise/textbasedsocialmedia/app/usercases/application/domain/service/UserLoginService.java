@@ -14,7 +14,7 @@ public class UserLoginService implements UserLoginUseCase
     private final UserLoginPort userLoginPort;
 
     @Override
-    public LoginResponse loginUser(UserLoginCommand command)
+    public LoginResponse loginUser(UserLoginCommand command) throws Exception
     {
         if(userLoginPort.getActiveUsersNum() < activeUsersMaxNum)
         {

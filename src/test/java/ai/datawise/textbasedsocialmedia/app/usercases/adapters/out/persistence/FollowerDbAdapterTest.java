@@ -33,7 +33,7 @@ class FollowerDbAdapterTest
             entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
             followerDbAdapter = new FollowerDbAdapter();
             followerDbAdapter.setEntityManagerFactory(entityManagerFactory);
-        } catch (Throwable t) {
+        } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)
@@ -53,7 +53,7 @@ class FollowerDbAdapterTest
             followedUserId = (Integer) em.createNativeQuery(queryStr3).getSingleResult();
 
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -72,7 +72,7 @@ class FollowerDbAdapterTest
     }
 
     @Test
-    void storeFollowersSuccessTest()
+    void storeFollowersSuccessTest() throws Exception
     {
         FollowUser followUser1 = new FollowUser(follower1UserId, followedUserId);
         FollowUser followUser2 = new FollowUser(follower2UserId, followedUserId);
@@ -147,7 +147,7 @@ class FollowerDbAdapterTest
                     .getFollowed().getUsername();
             assertEquals(followedUsername, followedUsr2 );
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -163,7 +163,7 @@ class FollowerDbAdapterTest
     }
 
     @Test
-    void deleteFollowersSuccessTest()
+    void deleteFollowersSuccessTest() throws Exception
     {
         FollowUser followUser1 = new FollowUser(follower1UserId, followedUserId);
         FollowUser followUser2 = new FollowUser(follower2UserId, followedUserId);
@@ -204,7 +204,7 @@ class FollowerDbAdapterTest
             assertEquals(0,followed.getFollowingEntities().size());
 
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()

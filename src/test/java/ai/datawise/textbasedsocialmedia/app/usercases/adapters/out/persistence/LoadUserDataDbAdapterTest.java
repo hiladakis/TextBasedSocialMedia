@@ -51,7 +51,7 @@ class LoadUserDataDbAdapterTest
     private static EntityManagerFactory entityManagerFactory;
 
     @BeforeAll
-    static void setUpAll() {
+    static void setUpAll() throws Exception{
         try {
             entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
             followerDbAdapter = new FollowerDbAdapter();
@@ -62,7 +62,7 @@ class LoadUserDataDbAdapterTest
             userPostDbAdapter.setEntityManagerFactory(entityManagerFactory);
             postCommentDbAdapter.setEntityManagerFactory(entityManagerFactory);
             loadUserDataDbAdapter.setEntityManagerFactory(entityManagerFactory);
-        } catch (Throwable t) {
+        } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)
@@ -120,7 +120,7 @@ class LoadUserDataDbAdapterTest
             post4Comment = new PostComment(postId4, follower1UserId, post4CommentText);
             postCommentDbAdapter.storePostComment(post4Comment);
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -132,7 +132,7 @@ class LoadUserDataDbAdapterTest
     }
 
     @AfterAll
-    static void tearDownAll() {
+    static void tearDownAll() throws Exception {
         followerDbAdapter.deleteFollower(followUser1);
         followerDbAdapter.deleteFollower(followUser2);
 
@@ -152,7 +152,7 @@ class LoadUserDataDbAdapterTest
             em.remove(userPostsEntity4);
             em.flush();
             entityTransaction.commit();
-        } catch (Throwable e) {
+        } catch (Exception  e) {
             if (entityTransaction != null && entityTransaction.isActive()) {
                 entityTransaction.rollback();
             }
@@ -165,7 +165,7 @@ class LoadUserDataDbAdapterTest
 
 
     @Test
-    void getFollowingPostsSuccessTest()
+    void getFollowingPostsSuccessTest() throws Exception
     {
         List<FollowerPostView> followerPostViewList = loadUserDataDbAdapter.getFollowingPosts(follower1UserId);
         assertEquals(3, followerPostViewList.size());
@@ -179,7 +179,7 @@ class LoadUserDataDbAdapterTest
     }
 
     @Test
-    void getUserPostAndLatestCommentsSuccessTest()
+    void getUserPostAndLatestCommentsSuccessTest() throws Exception
     {
         UserPostWithLatestCommentsView userPostWithLatestCommentsView =
                 loadUserDataDbAdapter.getUserPostAndLatestComments(postId3);
@@ -200,14 +200,14 @@ class LoadUserDataDbAdapterTest
     }
 
     @Test
-    void getAllPostCommentsSuccessTest()
+    void getAllPostCommentsSuccessTest() throws Exception
     {
         List<PostCommentView> postCommentViewList = loadUserDataDbAdapter.getAllPostComments(postId);
         assertEquals(3, postCommentViewList.size());
     }
 
     @Test
-    void getLatestCommentsOnAllUserOrFollowingPostsSuccessTest()
+    void getLatestCommentsOnAllUserOrFollowingPostsSuccessTest() throws Exception
     {
         List<PostCommentView> postCommentViewList = loadUserDataDbAdapter.
                 getLatestCommentsOnAllUserOrFollowingPosts(follower1UserId);
@@ -228,7 +228,7 @@ class LoadUserDataDbAdapterTest
     }
 
     @Test
-    void getFollowerListSuccessTest()
+    void getFollowerListSuccessTest() throws Exception
     {
         List<FollowerView> followerViewList = loadUserDataDbAdapter.getFollowerList(followedUserId);
         assertEquals(2, followerViewList.size());
@@ -242,7 +242,7 @@ class LoadUserDataDbAdapterTest
     }
 
     @Test
-    void getFollowingListSuccessTest()
+    void getFollowingListSuccessTest() throws Exception
     {
         List<FollowerView> followingViewList = loadUserDataDbAdapter.getFollowingList(follower1UserId);
         assertEquals(1, followingViewList.size());
@@ -257,7 +257,7 @@ class LoadUserDataDbAdapterTest
     }
 
     @Test
-    public void getUsersByUsernameStrSuccessTest()
+    public void getUsersByUsernameStrSuccessTest() throws Exception
     {
         String usernameStr = "hill";
         List<UserView> userViewList = loadUserDataDbAdapter.getUsersByUsernameStr(usernameStr);

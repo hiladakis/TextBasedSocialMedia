@@ -5,6 +5,6 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.r
 
 public interface UserPostPort
 {
-    public boolean isPremiumUser(int user_id);
-    public UserPostResponse storePost(UserPost userPost);
+    public boolean isPremiumUser(int user_id) throws Exception;
+    public UserPostResponse storePost(UserPost userPost) throws Exception;
 }

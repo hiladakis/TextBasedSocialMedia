@@ -5,8 +5,10 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.r
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.LoginUser;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.service.UserLoginService;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.in.model.UserLoginCommand;
+import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.in.model.UserRegistrationCommand;
 import com.google.gson.Gson;
 import io.javalin.Javalin;
+import jakarta.validation.ConstraintViolationException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -108,6 +110,7 @@ class UserLoginControllerTest
         });
 
         //check with creating an actual http connection to the endpoint
+        CloseableHttpResponse response = null;
         try {
             CloseableHttpClient client = HttpClients.createDefault();
             HttpPost httpPost = new HttpPost("http://localhost:7000/users/login/");
@@ -116,10 +119,8 @@ class UserLoginControllerTest
             httpPost.setEntity(entity);
             httpPost.setHeader("Accept", "application/json");
             httpPost.setHeader("Content-type", "application/json");
-
-            CloseableHttpResponse response = client.execute(httpPost);
+            response = client.execute(httpPost);
             client.close();
-            assertTrue(response.toString().contains("HTTP/1.1 400 Bad Request"));
         }
         catch(Exception ex)
         {
@@ -134,6 +135,8 @@ class UserLoginControllerTest
             app.close();
         }
 
+        assertFalse(response.toString().contains("HTTP/1.1 200 OK"));
+        assertTrue(response.toString().contains("HTTP/1.1 400 Bad Request"));
         verify(userLoginDbAdapter, Mockito.times(0)).loginUser(loginUser);
     }
 

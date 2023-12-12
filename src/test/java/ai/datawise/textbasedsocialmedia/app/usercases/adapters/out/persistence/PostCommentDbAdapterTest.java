@@ -37,7 +37,7 @@ class PostCommentDbAdapterTest {
     private static EntityManagerFactory entityManagerFactory;
 
     @BeforeAll
-    static void setUpAll() {
+    static void setUpAll() throws Exception{
         try {
             entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
             userPostDbAdapter = new UserPostDbAdapter();
@@ -45,7 +45,7 @@ class PostCommentDbAdapterTest {
 
             userPostDbAdapter.setEntityManagerFactory(entityManagerFactory);
             postCommentDbAdapter.setEntityManagerFactory(entityManagerFactory);
-        } catch (Throwable t) {
+        } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)
@@ -68,7 +68,7 @@ class PostCommentDbAdapterTest {
             postComment2 = new PostComment(postId, userIdPremium, postCommentText2);
             postComment3 = new PostComment(postId, userIdPremium, postCommentText3);
 
-        } catch (Throwable t) {
+        } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)
@@ -92,7 +92,7 @@ class PostCommentDbAdapterTest {
             em.remove(userPostsEntity);
             em.flush();
             entityTransaction.commit();
-        } catch (Throwable e) {
+        } catch (Exception  e) {
             if (entityTransaction != null && entityTransaction.isActive()) {
                 entityTransaction.rollback();
             }
@@ -105,7 +105,7 @@ class PostCommentDbAdapterTest {
     }
 
     @Test
-    void isPremiumUserTest() {
+    void isPremiumUserTest() throws Exception{
         boolean isPremiumUser1 = postCommentDbAdapter.isPremiumUser(userId);
         boolean isPremiumUser2 = postCommentDbAdapter.isPremiumUser(userIdPremium);
         assertFalse(isPremiumUser1);
@@ -114,7 +114,7 @@ class PostCommentDbAdapterTest {
 
 
     @Test
-    void storePostCommentSuccessTest() {
+    void storePostCommentSuccessTest() throws Exception{
         PostCommentResponse postCommentResponse = postCommentDbAdapter.storePostComment(postComment);
         assertNotNull(postCommentResponse);
         assertTrue(postCommentResponse.getPostCommentId() > 0);
@@ -145,7 +145,7 @@ class PostCommentDbAdapterTest {
             assertEquals(0, postCommentUser2.getUserPosts().size());
             assertEquals(3, postCommentUser1.getUserPosts().get(0).getPostComments().size());
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()

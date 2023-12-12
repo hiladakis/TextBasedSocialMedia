@@ -35,7 +35,7 @@ class UserPostDbAdapterTest {
             userPostDbAdapter = new UserPostDbAdapter();
 
             userPostDbAdapter.setEntityManagerFactory(entityManagerFactory);
-        } catch (Throwable t) {
+        } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
                     .map(Objects::toString)
@@ -62,7 +62,7 @@ class UserPostDbAdapterTest {
 
             String queryStr2 = "SELECT id FROM giannis.registered_users WHERE username='" + usernamePremium + "'";
             userIdPremium = (Integer) em.createNativeQuery(queryStr2).getSingleResult();
-        } catch (Throwable t)
+        } catch (Exception  t)
         {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -74,7 +74,7 @@ class UserPostDbAdapterTest {
     }
 
     @Test
-    void storePostSuccessTest() {
+    void storePostSuccessTest() throws Exception{
         UserPostResponse userPostResponse = userPostDbAdapter.storePost(userPost);
 
         assertNotNull(userPostResponse);
@@ -92,7 +92,7 @@ class UserPostDbAdapterTest {
             em.remove(userPostsEntity);
             em.flush();
             entityTransaction.commit();
-        } catch (Throwable e) {
+        } catch (Exception  e) {
             if (entityTransaction != null && entityTransaction.isActive()) {
                 entityTransaction.rollback();
             }
@@ -100,7 +100,7 @@ class UserPostDbAdapterTest {
     }
 
     @Test
-    void isPremiumUserTest()
+    void isPremiumUserTest() throws Exception
     {
         boolean isPremiumUser1 = userPostDbAdapter.isPremiumUser(userId);
         boolean isPremiumUser2 = userPostDbAdapter.isPremiumUser(userIdPremium);

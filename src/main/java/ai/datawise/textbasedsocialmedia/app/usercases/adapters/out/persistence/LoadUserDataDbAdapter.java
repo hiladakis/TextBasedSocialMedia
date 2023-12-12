@@ -26,7 +26,7 @@ public class LoadUserDataDbAdapter extends LoadUserDataDbAdapterBase implements 
     private EntityManagerFactory entityManagerFactory = null;
     private static final Logger logger = LogManager.getLogger(LoadUserDataDbAdapter.class);
 
-    public List<FollowerPostView> getFollowingPosts(int userId)
+    public List<FollowerPostView> getFollowingPosts(int userId) throws Exception
     {
         EntityManager entityManager = null;
         EntityTransaction trans = null;
@@ -60,27 +60,20 @@ public class LoadUserDataDbAdapter extends LoadUserDataDbAdapterBase implements 
             Collections.sort(followerPostViewList, followerPostViewComparator);
             return followerPostViewList;
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return null;
     }
 
-    public UserPostWithLatestCommentsView getUserPostAndLatestComments(int postId)
+    public UserPostWithLatestCommentsView getUserPostAndLatestComments(int postId) throws Exception
     {
         EntityManager entityManager = null;
         EntityTransaction trans = null;
@@ -114,26 +107,19 @@ public class LoadUserDataDbAdapter extends LoadUserDataDbAdapterBase implements 
             }
             return userPostWithLatestCommentsView;
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return null;
     }
-    public List<PostCommentView> getAllPostComments(int postId)
+    public List<PostCommentView> getAllPostComments(int postId) throws Exception
     {
         EntityManager entityManager = null;
         EntityTransaction trans = null;
@@ -152,27 +138,20 @@ public class LoadUserDataDbAdapter extends LoadUserDataDbAdapterBase implements 
 
             return postCommentViewList;
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
 
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return null;
     }
-    public List<PostCommentView> getLatestCommentsOnAllUserOrFollowingPosts(int userId)
+    public List<PostCommentView> getLatestCommentsOnAllUserOrFollowingPosts(int userId) throws Exception
     {
         EntityManager entityManager = null;
         EntityTransaction trans = null;
@@ -222,27 +201,19 @@ public class LoadUserDataDbAdapter extends LoadUserDataDbAdapterBase implements 
             entityManager.close();
             return postCommentViewMutableList;
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return null;
     }
-    public List<FollowerView> getFollowerList(int userId)
+    public List<FollowerView> getFollowerList(int userId) throws Exception
     {
         EntityManager entityManager = null;
         EntityTransaction trans = null;
@@ -261,27 +232,19 @@ public class LoadUserDataDbAdapter extends LoadUserDataDbAdapterBase implements 
             entityManager.close();
             return followerViewList;
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return null;
-
     }
-    public List<FollowerView> getFollowingList(int userId)
+    public List<FollowerView> getFollowingList(int userId) throws Exception
     {
         EntityManager entityManager = null;
         EntityTransaction trans = null;
@@ -300,27 +263,20 @@ public class LoadUserDataDbAdapter extends LoadUserDataDbAdapterBase implements 
             entityManager.close();
             return followingViewList;
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return null;
     }
 
-    public List<UserView> getUsersByUsernameStr(String usernameStr)
+    public List<UserView> getUsersByUsernameStr(String usernameStr) throws Exception
     {
         EntityManager entityManager = null;
         EntityTransaction trans = null;
@@ -344,24 +300,17 @@ public class LoadUserDataDbAdapter extends LoadUserDataDbAdapterBase implements 
             entityManager.close();
             return targetList;
         }
-        catch (Throwable t)
+        catch (Exception  t)
         {
             if ( trans != null && trans.isActive())
             {
                 trans.rollback();
             }
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n")));
-        }
-        finally
-        {
             if (entityManager != null) {
                 entityManager.close();
             }
+            throw t;
         }
-        return null;
     }
 
 }

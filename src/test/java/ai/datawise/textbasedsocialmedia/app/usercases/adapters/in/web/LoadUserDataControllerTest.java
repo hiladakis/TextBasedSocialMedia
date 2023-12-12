@@ -20,10 +20,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -46,7 +43,7 @@ class LoadUserDataControllerTest
     private static final Logger logger = LogManager.getLogger(LoadUserDataControllerTest.class);
 
     @Test
-    void getFollowingPostsSuccessTest()
+    void getFollowingPostsSuccessTest() throws Exception
     {
         int userId = 1;
         List<FollowerPostView> followerPostViewList = new ArrayList<>();
@@ -70,9 +67,7 @@ class LoadUserDataControllerTest
             client.close();
 
             InputStream inputStream = response.getEntity().getContent();
-            Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            Gson gson = new Gson();
-            String responseStr = gson.fromJson(reader,String.class);
+            String responseStr = readFromInputStream( inputStream);
             logger.info("getFollowingPostsSuccessTest responseStr: "+responseStr);
             assertTrue(response.toString().contains("HTTP/1.1 200 OK"));
             assertTrue(responseStr.contains("\"followerName\":\"jack.hill@gmail.com\""));
@@ -97,7 +92,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getUserPostAndLatestCommentsSuccessTest()
+    void getUserPostAndLatestCommentsSuccessTest() throws Exception
     {
         int postId = 1;
         UserPostWithLatestCommentsView userPostWithLatestCommentsView = new UserPostWithLatestCommentsView( 1,
@@ -125,9 +120,7 @@ class LoadUserDataControllerTest
             client.close();
 
             InputStream inputStream = response.getEntity().getContent();
-            Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            Gson gson = new Gson();
-            String responseStr = gson.fromJson(reader,String.class);
+            String responseStr = readFromInputStream( inputStream);
             logger.info("getUserPostAndLatestCommentsSuccessTest responseStr: "+responseStr);
             assertTrue(response.toString().contains("HTTP/1.1 200 OK"));
             assertTrue(responseStr.contains("\"postUser\":\"jane.hill@gmail.com\""));
@@ -158,7 +151,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getAllPostCommentsSuccessTest()
+    void getAllPostCommentsSuccessTest() throws Exception
     {
         int postId = 1;
         List<PostCommentView> postCommentViewList = new ArrayList<>();
@@ -183,9 +176,7 @@ class LoadUserDataControllerTest
             client.close();
 
             InputStream inputStream = response.getEntity().getContent();
-            Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            Gson gson = new Gson();
-            String responseStr = gson.fromJson(reader,String.class);
+            String responseStr = readFromInputStream( inputStream);
             logger.info("getAllPostCommentsSuccessTest responseStr: "+responseStr);
             assertTrue(response.toString().contains("HTTP/1.1 200 OK"));
 
@@ -214,7 +205,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getLatestCommentsOnAllUserOrFollowingPostsSuccessTest()
+    void getLatestCommentsOnAllUserOrFollowingPostsSuccessTest() throws Exception
     {
         int userId = 1;
         List<PostCommentView> postCommentViewList = new ArrayList<>();
@@ -239,9 +230,7 @@ class LoadUserDataControllerTest
             client.close();
 
             InputStream inputStream = response.getEntity().getContent();
-            Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            Gson gson = new Gson();
-            String responseStr = gson.fromJson(reader,String.class);
+            String responseStr = readFromInputStream( inputStream);
             logger.info("getLatestCommentsOnAllUserOrFollowingPostsSuccessTest responseStr: "+responseStr);
             assertTrue(response.toString().contains("HTTP/1.1 200 OK"));
 
@@ -272,7 +261,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getFollowerListSuccessTest()
+    void getFollowerListSuccessTest() throws Exception
     {
         int userId = 1;
         List<FollowerView> followerViewList = new ArrayList<>();
@@ -296,9 +285,7 @@ class LoadUserDataControllerTest
             client.close();
 
             InputStream inputStream = response.getEntity().getContent();
-            Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            Gson gson = new Gson();
-            String responseStr = gson.fromJson(reader,String.class);
+            String responseStr = readFromInputStream( inputStream);
             logger.info("getFollowerListSuccessTest responseStr: "+responseStr);
             assertTrue(response.toString().contains("HTTP/1.1 200 OK"));
 
@@ -322,7 +309,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getFollowingListSuccessTest()
+    void getFollowingListSuccessTest() throws Exception
     {
         int userId = 1;
         List<FollowerView> followingViewList = new ArrayList<>();
@@ -345,9 +332,7 @@ class LoadUserDataControllerTest
             client.close();
 
             InputStream inputStream = response.getEntity().getContent();
-            Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            Gson gson = new Gson();
-            String responseStr = gson.fromJson(reader,String.class);
+            String responseStr = readFromInputStream( inputStream);
             logger.info("getFollowingListSuccessTest responseStr: "+responseStr);
             assertTrue(response.toString().contains("HTTP/1.1 200 OK"));
 
@@ -371,7 +356,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getUsersSuccessTest()
+    void getUsersSuccessTest() throws Exception
     {
         String usernameStr = "jane";
         List<UserView> userViewList = new ArrayList<>();
@@ -392,9 +377,7 @@ class LoadUserDataControllerTest
             client.close();
 
             InputStream inputStream = response.getEntity().getContent();
-            Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            Gson gson = new Gson();
-            String responseStr = gson.fromJson(reader,String.class);
+            String responseStr = readFromInputStream( inputStream);
 
             logger.info("getUsersSuccessTest responseStr: "+responseStr);
             assertTrue(response.toString().contains("HTTP/1.1 200 OK"));
@@ -414,5 +397,18 @@ class LoadUserDataControllerTest
         }
         verify(loadUserDataDbAdapter, Mockito.times(1)).
                 getUsersByUsernameStr(usernameStr);
+    }
+
+    private String readFromInputStream(InputStream inputStream) throws Exception
+    {
+        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "utf8"));
+        StringBuffer sb = new StringBuffer();
+        String line = "";
+
+        while ((line = br.readLine()) != null) {
+            sb.append(line);
+        }
+
+        return sb.toString();
     }
 }

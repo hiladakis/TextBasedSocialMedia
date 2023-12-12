@@ -13,7 +13,7 @@ public class UserPostService implements UserPostUseCase
     private static final int freeUsersTextLimit = 1000;
     private static final int premiumUsersTextLimit = 3000;
     @Override
-    public UserPostResponse makePost(UserPostCommand userPostCommand)
+    public UserPostResponse makePost(UserPostCommand userPostCommand) throws Exception
     {
         boolean isUserAllowedToPost = isUserAllowedToPost(userPostPort.isPremiumUser(userPostCommand.getUserId()),
                 userPostCommand.getText().length());

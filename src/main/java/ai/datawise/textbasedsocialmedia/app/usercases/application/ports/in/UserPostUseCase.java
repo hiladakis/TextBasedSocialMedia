@@ -5,5 +5,5 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.in.model
 
 public interface UserPostUseCase
 {
-    public UserPostResponse makePost(UserPostCommand userPostCommand);
+    public UserPostResponse makePost(UserPostCommand userPostCommand) throws Exception;
 }

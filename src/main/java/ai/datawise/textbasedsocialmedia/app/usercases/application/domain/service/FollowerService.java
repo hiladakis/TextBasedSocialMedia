@@ -10,12 +10,12 @@ public class FollowerService implements FollowerUseCase
 {
     private final FollowerPort followerPort;
     @Override
-    public boolean addFollower(FollowerCommand followerCommand) {
+    public boolean addFollower(FollowerCommand followerCommand) throws Exception{
         return followerPort.storeFollower(followerCommand.getFollowUser());
     }
 
     @Override
-    public boolean removeFollower(FollowerCommand followerCommand) {
+    public boolean removeFollower(FollowerCommand followerCommand) throws Exception{
         return followerPort.deleteFollower(followerCommand.getFollowUser());
     }
 }
