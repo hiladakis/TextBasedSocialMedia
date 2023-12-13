@@ -5,14 +5,15 @@ import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.m
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.responses.LoginResponse;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.LoginUser;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.User;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.Persistence;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
+import ai.datawise.textbasedsocialmedia.appconfig.ConfigInstances;
+import jakarta.persistence.*;
+import lombok.extern.java.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
 
+import javax.naming.LimitExceededException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -30,18 +31,7 @@ class UserLoginDbAdapterTest
     @BeforeAll
     static void setUpAll()
     {
-        try{
-            entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
-        }
-        catch(Exception  t){
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n"))
-            );
-
-            logger.error(t);
-        }
+        entityManagerFactory = ConfigInstances.getEntityManagerFactory();
     }
 
     @AfterAll
@@ -60,8 +50,6 @@ class UserLoginDbAdapterTest
         {
             try{
                 userLoginDbAdapter = new UserLoginDbAdapter();
-
-                userLoginDbAdapter.setEntityManagerFactory(entityManagerFactory);
                 loginUser = new LoginUser("irene@gmail.com","15984");
 
                 UserRegistrationDbAdapter userRegistrationDbAdapter = new UserRegistrationDbAdapter();
@@ -84,7 +72,6 @@ class UserLoginDbAdapterTest
         {
             try{
                 userLoginDbAdapter = new UserLoginDbAdapter();
-                userLoginDbAdapter.setEntityManagerFactory(entityManagerFactory);
                 loginUser = new LoginUser("irene@gmail.com","15984");
 
                 UserRegistrationDbAdapter userRegistrationDbAdapter = new UserRegistrationDbAdapter();
@@ -166,10 +153,11 @@ class UserLoginDbAdapterTest
 
 
     @Test
-    void loginUserIntegrationSuccessTest()
+    void loginUserIntegrationSuccessTest() throws Exception
     {
-        LoginResponse loginResponse = userLoginDbAdapter.loginUser(loginUser);
-        try(EntityManager em = userLoginDbAdapter.getEntityManagerFactory().createEntityManager())
+        LoginResponse loginResponse = DbUtils.inTransaction(entityManager ->
+                userLoginDbAdapter.loginUser(loginUser));
+        try(EntityManager em = ConfigInstances.getEntityManagerFactory().createEntityManager())
         {
             String queryStr = "SELECT id FROM giannis.authenticated_users WHERE username='"+loginUser.getUsername()+"'";
             Object authenticatedUserId = em.createNativeQuery(queryStr ).getSingleResult();
@@ -185,16 +173,15 @@ class UserLoginDbAdapterTest
     @Test
     void loginUserIntegrationFailureTest()
     {
-        LoginResponse loginResponse = userLoginDbAdapter.loginUser(loginUser);
-        try(EntityManager em = userLoginDbAdapter.getEntityManagerFactory().createEntityManager())
-        {
-            Exception  Exception  = assertThrows(Exception .class, () -> {
-                String queryStr = "SELECT id FROM giannis.authenticated_users WHERE username='"+loginUser.getUsername()+"'";
-                em.createNativeQuery(queryStr ).getSingleResult();
-            });
-            String expectedMessage = "No result found for query";
-            assertTrue(Exception .getMessage().contains(expectedMessage));
-        }
-        assertNull(loginResponse);
+        assertThrows(NoResultException.class, () -> {
+            try{
+                DbUtils.inTransaction( entityManager -> userLoginDbAdapter.loginUser(loginUser));
+            }
+            catch(NoResultException ex){
+                String expectedMessage = "No result found for query";
+                assertTrue(ex.getMessage().contains(expectedMessage));
+                throw ex;
+            }
+        });
     }
 }

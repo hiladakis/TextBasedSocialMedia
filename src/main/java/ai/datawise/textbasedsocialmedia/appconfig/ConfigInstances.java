@@ -28,7 +28,6 @@ public class ConfigInstances
     public static UserLoginController getUserLoginControllerInstance()
     {
         UserLoginDbAdapter userLoginDbAdapter = new UserLoginDbAdapter();
-        userLoginDbAdapter.setEntityManagerFactory(entityManagerFactory);
         UserLoginService userLoginService = new UserLoginService(userLoginDbAdapter);
         return new UserLoginController(userLoginService);
     }

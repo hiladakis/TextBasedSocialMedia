@@ -5,6 +5,7 @@ import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.m
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.responses.LoginResponse;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.LoginUser;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.out.UserLoginPort;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
@@ -20,42 +21,25 @@ import java.util.stream.Collectors;
 
 public class UserLoginDbAdapter implements UserLoginPort
 {
-    @Setter
-    @Getter
-    private EntityManagerFactory entityManagerFactory = null;
     private static final Logger logger = LogManager.getLogger(UserLoginDbAdapter.class);
 
     @Override
-    public LoginResponse loginUser(LoginUser loginUser)
+    public LoginResponse loginUser(LoginUser loginUser) throws Exception
     {
-        EntityManager entityManager = null;
-        EntityTransaction trans = null;
         try
         {
-            entityManager = entityManagerFactory.createEntityManager();
-            trans = entityManager.getTransaction();
-            trans.begin();
+            EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
             RegisteredUsersEntity registeredUsersEntity = matchUserCredentials(loginUser, entityManager);
             if( registeredUsersEntity != null)
             {
                 AuthenticatedUsersEntity authEntity = getAuthUsersEntityFromRegisteredUser(registeredUsersEntity);
                 entityManager.persist(authEntity);
-                trans.commit();
-                entityManager.close();
                 return new LoginResponse(registeredUsersEntity.getId(), registeredUsersEntity.getUsername(),
                         registeredUsersEntity.getRole());
             }
-            trans.commit();
-            entityManager.close();
         }
         catch (Exception t)
         {
-            if (trans != null && trans.isActive()) {
-                trans.rollback();
-            }
-            if (entityManager != null) {
-                entityManager.close();
-            }
             throw t;
         }
         return null;
@@ -64,27 +48,18 @@ public class UserLoginDbAdapter implements UserLoginPort
     @Override
     public Long getActiveUsersNum()
     {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
         String queryStr = "SELECT count(id) FROM giannis.authenticated_users";
-        Long registeredUsersNum = (Long)entityManager.createNativeQuery(queryStr ).getSingleResult();
-        entityManager.close();
-        return registeredUsersNum;
+        return (Long)entityManager.createNativeQuery(queryStr ).getSingleResult();
     }
 
     private RegisteredUsersEntity matchUserCredentials(LoginUser loginUser, EntityManager entityManager)
     {
-        String queryStr = "SELECT id FROM giannis.registered_users WHERE username='"+loginUser.getUsername()+"'";
+        String queryStr = "SELECT id FROM giannis.registered_users WHERE username='"+loginUser.getUsername()+"'"
+                +" AND password='"+loginUser.getPassword()+"'";
 
         Object registeredUserId = entityManager.createNativeQuery(queryStr ).getSingleResult();
-        if( registeredUserId != null )
-        {
-            RegisteredUsersEntity registeredUsersEntity = entityManager.find(RegisteredUsersEntity.class,registeredUserId);
-            if(registeredUsersEntity != null && loginUser.getPassword().equals(registeredUsersEntity.getPassword()))
-            {
-                return registeredUsersEntity;
-            }
-        }
-        return null;
+        return entityManager.find(RegisteredUsersEntity.class, registeredUserId);
     }
 
     private AuthenticatedUsersEntity getAuthUsersEntityFromRegisteredUser(RegisteredUsersEntity registeredUsersEntity)
