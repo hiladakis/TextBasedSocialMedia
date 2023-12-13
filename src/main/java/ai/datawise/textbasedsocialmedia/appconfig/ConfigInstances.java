@@ -34,7 +34,6 @@ public class ConfigInstances
     public static UserPostController getUserPostControllerInstance()
     {
         UserPostDbAdapter userPostDbAdapter = new UserPostDbAdapter();
-        userPostDbAdapter.setEntityManagerFactory(entityManagerFactory);
         UserPostService userPostService = new UserPostService(userPostDbAdapter);
         return new UserPostController(userPostService);
     }

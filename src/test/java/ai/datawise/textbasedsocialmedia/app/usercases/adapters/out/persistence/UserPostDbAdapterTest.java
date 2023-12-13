@@ -3,10 +3,11 @@ package ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence;
 import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.model.UserPostsEntity;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.UserPost;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.responses.UserPostResponse;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
+import ai.datawise.textbasedsocialmedia.appconfig.ConfigInstances;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.Persistence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
@@ -31,10 +32,8 @@ class UserPostDbAdapterTest {
     @BeforeAll
     static void setUpAll() {
         try {
-            entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
+            entityManagerFactory = ConfigInstances.getEntityManagerFactory();
             userPostDbAdapter = new UserPostDbAdapter();
-
-            userPostDbAdapter.setEntityManagerFactory(entityManagerFactory);
         } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -44,17 +43,10 @@ class UserPostDbAdapterTest {
         }
     }
 
-    @AfterAll
-    static void tearDownAll() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
-    }
-
     @BeforeEach
     void setUp()
     {
-        try (EntityManager em = userPostDbAdapter.getEntityManagerFactory().createEntityManager())
+        try (EntityManager em = entityManagerFactory.createEntityManager())
         {
             String queryStr = "SELECT id FROM giannis.registered_users WHERE username='" + username + "'";
             userId = (Integer) em.createNativeQuery(queryStr).getSingleResult();
@@ -75,8 +67,8 @@ class UserPostDbAdapterTest {
 
     @Test
     void storePostSuccessTest() throws Exception{
-        UserPostResponse userPostResponse = userPostDbAdapter.storePost(userPost);
-
+        UserPostResponse userPostResponse =
+                DbUtils.inTransaction(entityManager-> userPostDbAdapter.storePost(userPost));
         assertNotNull(userPostResponse);
         assertTrue(userPostResponse.getPostId() > 0);
         assertNotNull(userPostResponse.getPostDate());
@@ -102,9 +94,12 @@ class UserPostDbAdapterTest {
     @Test
     void isPremiumUserTest() throws Exception
     {
-        boolean isPremiumUser1 = userPostDbAdapter.isPremiumUser(userId);
-        boolean isPremiumUser2 = userPostDbAdapter.isPremiumUser(userIdPremium);
-        assertFalse(isPremiumUser1);
-        assertTrue(isPremiumUser2);
+        DbUtils.inTransaction(entityManager -> {
+            boolean isPremiumUser1 = userPostDbAdapter.isPremiumUser(userId);
+            boolean isPremiumUser2 = userPostDbAdapter.isPremiumUser(userIdPremium);
+            assertFalse(isPremiumUser1);
+            assertTrue(isPremiumUser2);
+            return true;
+        });
     }
 }

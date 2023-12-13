@@ -1,16 +1,16 @@
 package ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence;
 
-import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.model.PostCommentsEntity;
 import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.model.UserPostsEntity;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.FollowUser;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.PostComment;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.UserPost;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.responses.UserPostResponse;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.views.*;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
+import ai.datawise.textbasedsocialmedia.appconfig.ConfigInstances;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.Persistence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
@@ -53,13 +53,12 @@ class LoadUserDataDbAdapterTest
     @BeforeAll
     static void setUpAll() throws Exception{
         try {
-            entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
+            entityManagerFactory = ConfigInstances.getEntityManagerFactory();
             followerDbAdapter = new FollowerDbAdapter();
             userPostDbAdapter = new UserPostDbAdapter();
             postCommentDbAdapter = new PostCommentDbAdapter();
             loadUserDataDbAdapter = new LoadUserDataDbAdapter();
             followerDbAdapter.setEntityManagerFactory(entityManagerFactory);
-            userPostDbAdapter.setEntityManagerFactory(entityManagerFactory);
             postCommentDbAdapter.setEntityManagerFactory(entityManagerFactory);
             loadUserDataDbAdapter.setEntityManagerFactory(entityManagerFactory);
         } catch (Exception  t) {
@@ -87,7 +86,9 @@ class LoadUserDataDbAdapterTest
             followerDbAdapter.storeFollower(followUser2);
             //first post made by follower1
             userPost = new UserPost(follower1UserId, postText);
-            UserPostResponse userPostResponse = userPostDbAdapter.storePost(userPost);
+            UserPostResponse userPostResponse = DbUtils.
+                    inTransaction(entityManager -> userPostDbAdapter.storePost(userPost));
+
             postId = userPostResponse.getPostId();
 
             postComment = new PostComment(postId, followedUserId, postCommentText);
@@ -99,7 +100,8 @@ class LoadUserDataDbAdapterTest
             postCommentDbAdapter.storePostComment(postComment3);
             //second post made by followed user
             userPost2 = new UserPost(followedUserId, post2Text);
-            UserPostResponse userPostResponse2 = userPostDbAdapter.storePost(userPost2);
+            UserPostResponse userPostResponse2 =
+                    DbUtils.inTransaction(entityManager -> userPostDbAdapter.storePost(userPost2));
             postId2 = userPostResponse2.getPostId();
 
             post2Comment = new PostComment(postId2, follower2UserId, post2CommentText);
@@ -109,13 +111,16 @@ class LoadUserDataDbAdapterTest
             postCommentDbAdapter.storePostComment(post2Comment2);
             //third post made by followed user
             userPost3 = new UserPost(followedUserId, post3Text);
-            UserPostResponse userPostResponse3 = userPostDbAdapter.storePost(userPost3);
+            UserPostResponse userPostResponse3 =
+                    DbUtils.inTransaction(entityManager -> userPostDbAdapter.storePost(userPost3));
+
             postId3 = userPostResponse3.getPostId();
             post3Comment = new PostComment(postId3, follower1UserId, post3CommentText);
             postCommentDbAdapter.storePostComment(post3Comment);
             //fourth post made by followed user
             userPost4 = new UserPost(followedUserId, post4Text);
-            UserPostResponse userPostResponse4 = userPostDbAdapter.storePost(userPost4);
+            UserPostResponse userPostResponse4 =
+                    DbUtils.inTransaction(entityManager -> userPostDbAdapter.storePost(userPost4));
             postId4 = userPostResponse4.getPostId();
             post4Comment = new PostComment(postId4, follower1UserId, post4CommentText);
             postCommentDbAdapter.storePostComment(post4Comment);
@@ -156,10 +161,6 @@ class LoadUserDataDbAdapterTest
             if (entityTransaction != null && entityTransaction.isActive()) {
                 entityTransaction.rollback();
             }
-        }
-
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
         }
     }
 

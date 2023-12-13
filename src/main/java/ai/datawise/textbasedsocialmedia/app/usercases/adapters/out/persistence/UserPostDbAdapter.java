@@ -5,50 +5,28 @@ import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.m
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.UserPost;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.responses.UserPostResponse;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.out.UserPostPort;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityTransaction;
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.Timestamp;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class UserPostDbAdapter implements UserPostPort
 {
     private static final Logger logger = LogManager.getLogger(UserPostDbAdapter.class);
 
-    @Setter
-    @Getter
-    private EntityManagerFactory entityManagerFactory = null;
-
     @Override
     public boolean isPremiumUser(int user_id) throws Exception
     {
-        EntityManager entityManager = null;
-        try
-        {
-            entityManager = entityManagerFactory.createEntityManager();
+        EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
 
-            RegisteredUsersEntity registeredUsersEntity = entityManager
-                    .find(RegisteredUsersEntity.class, user_id);
+        RegisteredUsersEntity registeredUsersEntity = entityManager
+                .find(RegisteredUsersEntity.class, user_id);
 
-            if(registeredUsersEntity != null && registeredUsersEntity.getRole().equalsIgnoreCase("Premium"))
-            {
-                entityManager.close();
-                return true;
-            }
-        }
-        catch (Exception  t)
+        if(registeredUsersEntity != null && registeredUsersEntity.getRole().equalsIgnoreCase("Premium"))
         {
-            if (entityManager != null) {
-                entityManager.close();
-            }
-            throw t;
+            return true;
         }
         return false;
     }
@@ -56,41 +34,19 @@ public class UserPostDbAdapter implements UserPostPort
     @Override
     public UserPostResponse storePost(UserPost userPost) throws Exception
     {
-        EntityManager entityManager = null;
-        EntityTransaction trans = null;
-        try
-        {
-            entityManager = entityManagerFactory.createEntityManager();
-            trans = entityManager.getTransaction();
-            trans.begin();
+        EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
+        RegisteredUsersEntity registeredUsersEntity = entityManager
+                .find(RegisteredUsersEntity.class,userPost.getUserId());
 
-            RegisteredUsersEntity registeredUsersEntity = entityManager
-                    .find(RegisteredUsersEntity.class,userPost.getUserId());
+        UserPostsEntity userPostsEntity = getUserPostsEntityFromUserPost(userPost);
+        registeredUsersEntity.addPost(userPostsEntity);
+        entityManager.persist(registeredUsersEntity);
+        entityManager.flush();
 
-            UserPostsEntity userPostsEntity = getUserPostsEntityFromUserPost(userPost);
-            registeredUsersEntity.addPost(userPostsEntity);
-            entityManager.persist(registeredUsersEntity);
-            entityManager.flush();
+        logger.info("userPost id: " + userPostsEntity.getId());
 
-            trans.commit();
-            entityManager.close();
-
-            logger.info("userPost id: " + userPostsEntity.getId());
-
-            return (new UserPostResponse(userPostsEntity.getId()
-                    ,userPostsEntity.getPostDate()));
-        }
-        catch (Exception  t)
-        {
-            if ( trans != null && trans.isActive())
-            {
-                trans.rollback();
-            }
-            if (entityManager != null) {
-                entityManager.close();
-            }
-            throw t;
-        }
+        return (new UserPostResponse(userPostsEntity.getId()
+                ,userPostsEntity.getPostDate()));
     }
 
     private UserPostsEntity getUserPostsEntityFromUserPost(UserPost userPost)

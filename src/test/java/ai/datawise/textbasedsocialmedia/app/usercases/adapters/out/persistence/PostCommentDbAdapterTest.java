@@ -6,10 +6,11 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.P
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.responses.PostCommentResponse;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.UserPost;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.responses.UserPostResponse;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
+import ai.datawise.textbasedsocialmedia.appconfig.ConfigInstances;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.Persistence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
@@ -39,11 +40,9 @@ class PostCommentDbAdapterTest {
     @BeforeAll
     static void setUpAll() throws Exception{
         try {
-            entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
+            entityManagerFactory = ConfigInstances.getEntityManagerFactory();
             userPostDbAdapter = new UserPostDbAdapter();
             postCommentDbAdapter = new PostCommentDbAdapter();
-
-            userPostDbAdapter.setEntityManagerFactory(entityManagerFactory);
             postCommentDbAdapter.setEntityManagerFactory(entityManagerFactory);
         } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
@@ -53,7 +52,7 @@ class PostCommentDbAdapterTest {
             );
         }
 
-        try (EntityManager em = userPostDbAdapter.getEntityManagerFactory().createEntityManager()) {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
             String queryStr = "SELECT id FROM giannis.registered_users WHERE username='" + username + "'";
             userId = (Integer) em.createNativeQuery(queryStr).getSingleResult();
             userPost = new UserPost(userId, postText);
@@ -61,7 +60,8 @@ class PostCommentDbAdapterTest {
             String queryStr2 = "SELECT id FROM giannis.registered_users WHERE username='" + usernamePremium + "'";
             userIdPremium = (Integer) em.createNativeQuery(queryStr2).getSingleResult();
 
-            UserPostResponse userPostResponse = userPostDbAdapter.storePost(userPost);
+            UserPostResponse userPostResponse = DbUtils.
+                    inTransaction(entityManager -> userPostDbAdapter.storePost(userPost));
             postId = userPostResponse.getPostId();
 
             postComment = new PostComment(postId, userId, postCommentText);
@@ -97,10 +97,6 @@ class PostCommentDbAdapterTest {
                 entityTransaction.rollback();
             }
             throw e;
-        }
-
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
         }
     }
 
