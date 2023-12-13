@@ -3,6 +3,7 @@ package ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence;
 import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.model.RegisteredUsersEntity;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.User;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.out.UserRegistrationPort;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
@@ -13,37 +14,15 @@ import org.apache.logging.log4j.Logger;
 
 public class UserRegistrationDbAdapter implements UserRegistrationPort
 {
-    @Setter
-    @Getter
-    private EntityManagerFactory entityManagerFactory = null;
     private static final Logger logger = LogManager.getLogger(UserRegistrationDbAdapter.class);
 
     @Override
     public boolean storeRegisteredUser(User user) throws Exception
     {
         RegisteredUsersEntity usersEntity = getRegisteredUsersEntityFromUser(user);
-        EntityManager entityManager = null;
-        EntityTransaction trans = null;
-        try
-        {
-            entityManager = entityManagerFactory.createEntityManager();
-            trans = entityManager.getTransaction();
-            trans.begin();
-            entityManager.persist(usersEntity);
-            trans.commit();
-            return true;
-        }
-        catch (Exception  t)
-        {
-            if ( trans != null && trans.isActive())
-            {
-                trans.rollback();
-            }
-            if (entityManager != null) {
-                entityManager.close();
-            }
-            throw t;
-        }
+        EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
+        entityManager.persist(usersEntity);
+        return true;
     }
 
     private RegisteredUsersEntity getRegisteredUsersEntityFromUser(User user)

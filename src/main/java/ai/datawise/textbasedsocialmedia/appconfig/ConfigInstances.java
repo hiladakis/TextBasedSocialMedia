@@ -20,7 +20,6 @@ public class ConfigInstances
     public static UserRegistrationController getUserRegistrationControllerInstance()
     {
         UserRegistrationDbAdapter userRegistrationDbAdapter = new UserRegistrationDbAdapter();
-        userRegistrationDbAdapter.setEntityManagerFactory(entityManagerFactory);
         UserRegistrationService userRegistrationService = new UserRegistrationService(userRegistrationDbAdapter);
         return new UserRegistrationController(userRegistrationService);
     }

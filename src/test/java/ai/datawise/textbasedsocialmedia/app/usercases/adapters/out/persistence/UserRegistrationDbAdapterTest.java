@@ -2,10 +2,11 @@ package ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence;
 
 import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.model.RegisteredUsersEntity;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.User;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
+import ai.datawise.textbasedsocialmedia.appconfig.ConfigInstances;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.Persistence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
@@ -28,7 +29,7 @@ class UserRegistrationDbAdapterTest
     static void setUpAll()
     {
         try{
-            entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
+            entityManagerFactory = ConfigInstances.getEntityManagerFactory();
         }
         catch(Exception  t){
             logger.error(t + Arrays.asList(t.getStackTrace())
@@ -39,15 +40,6 @@ class UserRegistrationDbAdapterTest
         }
     }
 
-    @AfterAll
-    static void tearDownAll()
-    {
-        if(entityManagerFactory != null)
-        {
-            entityManagerFactory.close();
-        }
-    }
-
     @BeforeEach
     void setUp(TestInfo info)
     {
@@ -55,7 +47,6 @@ class UserRegistrationDbAdapterTest
         {
             try{
                 userRegistrationDbAdapter = new UserRegistrationDbAdapter();
-                userRegistrationDbAdapter.setEntityManagerFactory(entityManagerFactory);
                 user = new User("giannis.hiladakis@gmail.com","15984","Free");
             }
             catch(Exception  t)
@@ -75,7 +66,6 @@ class UserRegistrationDbAdapterTest
     {
         if(info.getDisplayName().equals("storeRegisteredUserIntegrationSuccessTest()"))
         {
-            EntityManagerFactory entityManagerFactory = userRegistrationDbAdapter.getEntityManagerFactory();
             try(EntityManager em = entityManagerFactory.createEntityManager())
             {
                 String queryStr = "SELECT id FROM giannis.registered_users WHERE username='"+user.getUsername()+"'";
@@ -94,8 +84,8 @@ class UserRegistrationDbAdapterTest
     @Test
     void storeRegisteredUserIntegrationSuccessTest() throws Exception
     {
-        userRegistrationDbAdapter.storeRegisteredUser(user);
-        try(EntityManager em = userRegistrationDbAdapter.getEntityManagerFactory().createEntityManager())
+        DbUtils.inTransaction(entityManager -> userRegistrationDbAdapter.storeRegisteredUser(user));
+        try(EntityManager em = entityManagerFactory.createEntityManager())
         {
             String queryStr = "SELECT id FROM giannis.registered_users WHERE username='"+user.getUsername()+"'";
             Object registeredUserId = em.createNativeQuery(queryStr ).getSingleResult();

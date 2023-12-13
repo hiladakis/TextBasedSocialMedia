@@ -2,21 +2,31 @@ package ai.datawise.textbasedsocialmedia.app.usercases.application.domain.servic
 
 import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.UserRegistrationDbAdapter;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.User;
+import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.responses.LoginResponse;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.in.model.UserRegistrationCommand;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
+import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import javax.naming.LimitExceededException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserRegistrationServiceTest
 {
+    @Mock
+    EntityManager entityManager;
     @Mock
     private UserRegistrationDbAdapter userRegistrationDbAdapter;
 
@@ -28,8 +38,15 @@ class UserRegistrationServiceTest
         User user = newUserRegistrationCommand.getUser();
         UserRegistrationService userRegistrationService = new UserRegistrationService(userRegistrationDbAdapter);
 
-        userRegistrationService.registerUser(newUserRegistrationCommand);
-        verify(userRegistrationDbAdapter, Mockito.times(1)).storeRegisteredUser(user);
+        DbUtils.EntityManagerFunction<Boolean> entityManagerFunction = entityManager ->
+                userRegistrationDbAdapter.storeRegisteredUser(user);
+
+        try (MockedStatic<DbUtils> dbUtilsMockedStatic1 = Mockito.mockStatic(DbUtils.class)) {
+            dbUtilsMockedStatic1.when(() -> DbUtils.inTransaction(any())).
+                    then(invocation -> entityManagerFunction.apply(entityManager));
+            userRegistrationService.registerUser(newUserRegistrationCommand);
+            verify(userRegistrationDbAdapter, Mockito.times(1)).storeRegisteredUser(user);
+        }
     }
 
     @Test

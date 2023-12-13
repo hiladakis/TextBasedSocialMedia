@@ -34,15 +34,6 @@ class UserLoginDbAdapterTest
         entityManagerFactory = ConfigInstances.getEntityManagerFactory();
     }
 
-    @AfterAll
-    static void tearDownAll()
-    {
-        if(entityManagerFactory != null)
-        {
-            entityManagerFactory.close();
-        }
-    }
-
     @BeforeEach
     void setUp(TestInfo info) throws Exception
     {
@@ -53,10 +44,8 @@ class UserLoginDbAdapterTest
                 loginUser = new LoginUser("irene@gmail.com","15984");
 
                 UserRegistrationDbAdapter userRegistrationDbAdapter = new UserRegistrationDbAdapter();
-                userRegistrationDbAdapter.setEntityManagerFactory(entityManagerFactory);
                 User user = new User("irene@gmail.com","15984","Free");
-                userRegistrationDbAdapter.storeRegisteredUser(user);
-
+                DbUtils.inTransaction( entityManager -> userRegistrationDbAdapter.storeRegisteredUser(user));
             }
             catch(Exception  t)
             {
@@ -75,9 +64,8 @@ class UserLoginDbAdapterTest
                 loginUser = new LoginUser("irene@gmail.com","15984");
 
                 UserRegistrationDbAdapter userRegistrationDbAdapter = new UserRegistrationDbAdapter();
-                userRegistrationDbAdapter.setEntityManagerFactory(entityManagerFactory);
                 User user = new User("irene@gmail.com","15985","Free");
-                userRegistrationDbAdapter.storeRegisteredUser(user);
+                DbUtils.inTransaction( entityManager -> userRegistrationDbAdapter.storeRegisteredUser(user));
             }
             catch(Exception  t)
             {
