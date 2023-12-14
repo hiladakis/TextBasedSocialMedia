@@ -24,7 +24,8 @@ public class UserPostService implements UserPostUseCase
                 return userPostPort.storePost(userPost);
             }
             else{
-                return null;
+                throw new Exception("User "+userPostCommand.getUserPost()+" is not allowed to post text size "
+                    + userPostCommand.getText().length());
             }
         });
     }

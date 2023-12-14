@@ -26,7 +26,7 @@ public class PostCommentService implements PostCommentUseCase
                 return postCommentPort.storePostComment(postComment);
             }
             else{
-                return null;
+                throw new Exception("User "+postCommentCommand.getUserId()+" is not allowed to comment. ");
             }
         });
         return postCommentResponse;
