@@ -24,7 +24,7 @@ public class UserLoginDbAdapter implements UserLoginPort
     private static final Logger logger = LogManager.getLogger(UserLoginDbAdapter.class);
 
     @Override
-    public LoginResponse loginUser(LoginUser loginUser) throws Exception
+    public LoginResponse loginUser(LoginUser loginUser)
     {
         try
         {

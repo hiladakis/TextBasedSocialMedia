@@ -4,6 +4,7 @@ import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.m
 import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.model.RegisteredUsersEntity;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.FollowUser;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.out.FollowerPort;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
@@ -18,97 +19,50 @@ import java.util.stream.Collectors;
 
 public class FollowerDbAdapter implements FollowerPort
 {
-    @Setter
-    @Getter
-    private EntityManagerFactory entityManagerFactory = null;
     private static final Logger logger = LogManager.getLogger(FollowerDbAdapter.class);
 
     @Override
-    public boolean storeFollower(FollowUser followUser) throws Exception{
-        EntityManager entityManager = null;
-        EntityTransaction trans = null;
-        try
-        {
-            entityManager = entityManagerFactory.createEntityManager();
-            trans = entityManager.getTransaction();
-            trans.begin();
+    public boolean storeFollower(FollowUser followUser)
+    {
+        EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
 
-            RegisteredUsersEntity followerUsersEntity = entityManager
-                    .find(RegisteredUsersEntity.class, followUser.getFollowerUserId());
+        RegisteredUsersEntity followerUsersEntity = entityManager
+                .find(RegisteredUsersEntity.class, followUser.getFollowerUserId());
 
-            RegisteredUsersEntity followingUsersEntity = entityManager
-                    .find(RegisteredUsersEntity.class, followUser.getFollowingUserId());
+        RegisteredUsersEntity followingUsersEntity = entityManager
+                .find(RegisteredUsersEntity.class, followUser.getFollowingUserId());
 
-            FollowersEntity followersEntity = new FollowersEntity();
-            followerUsersEntity.addFollowing(followersEntity);
-            followingUsersEntity.addFollower(followersEntity);
+        FollowersEntity followersEntity = new FollowersEntity();
+        followerUsersEntity.addFollowing(followersEntity);
+        followingUsersEntity.addFollower(followersEntity);
 
-            entityManager.persist(followerUsersEntity);
-            entityManager.persist(followingUsersEntity);
+        entityManager.persist(followerUsersEntity);
+        entityManager.persist(followingUsersEntity);
 
-            entityManager.flush();
-            trans.commit();
-            entityManager.close();
-
-            logger.info("followerUsersEntity id : "+followersEntity.getId());
-            return true;
-        }
-        catch (Exception  t)
-        {
-            if ( trans != null && trans.isActive())
-            {
-                trans.rollback();
-            }
-
-            if (entityManager != null) {
-                entityManager.close();
-            }
-
-            throw t;
-        }
+        logger.info("followerUsersEntity id : "+followersEntity.getId());
+        return true;
     }
 
     @Override
-    public boolean deleteFollower(FollowUser followUser) throws Exception {
-        EntityManager entityManager = null;
-        EntityTransaction trans = null;
-        try
-        {
-            entityManager = entityManagerFactory.createEntityManager();
-            trans = entityManager.getTransaction();
-            trans.begin();
+    public boolean deleteFollower(FollowUser followUser)
+    {
+        EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
 
-            FollowersEntity followersEntity = getFollowersEntity(followUser, entityManager);
+        FollowersEntity followersEntity = getFollowersEntity(followUser, entityManager);
 
-            RegisteredUsersEntity followerUsersEntity = entityManager
-                    .find(RegisteredUsersEntity.class, followUser.getFollowerUserId());
+        RegisteredUsersEntity followerUsersEntity = entityManager
+                .find(RegisteredUsersEntity.class, followUser.getFollowerUserId());
 
-            RegisteredUsersEntity followingUsersEntity = entityManager
-                    .find(RegisteredUsersEntity.class, followUser.getFollowingUserId());
+        RegisteredUsersEntity followingUsersEntity = entityManager
+                .find(RegisteredUsersEntity.class, followUser.getFollowingUserId());
 
-            followerUsersEntity.removeFollowing(followersEntity);
-            followingUsersEntity.removeFollower(followersEntity);
+        followerUsersEntity.removeFollowing(followersEntity);
+        followingUsersEntity.removeFollower(followersEntity);
 
-            entityManager.persist(followerUsersEntity);
-            entityManager.persist(followingUsersEntity);
+        entityManager.persist(followerUsersEntity);
+        entityManager.persist(followingUsersEntity);
 
-            entityManager.flush();
-            trans.commit();
-            entityManager.close();
-
-            return true;
-        }
-        catch (Exception  t)
-        {
-            if ( trans != null && trans.isActive())
-            {
-                trans.rollback();
-            }
-            if (entityManager != null) {
-                entityManager.close();
-            }
-            throw t;
-        }
+        return true;
     }
 
     private FollowersEntity getFollowersEntity(FollowUser followUser, EntityManager entityManager)

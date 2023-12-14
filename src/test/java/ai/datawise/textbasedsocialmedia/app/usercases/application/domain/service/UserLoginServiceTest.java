@@ -58,7 +58,7 @@ class UserLoginServiceTest
     }
 
     @Test
-    void loginUserFailureTest() throws Exception
+    void loginUserFailureTest()
     {
         UserLoginCommand userLoginCommand = new UserLoginCommand("giannis@example.com", "12345");
         LoginUser loginUser = userLoginCommand.getLoginUser();

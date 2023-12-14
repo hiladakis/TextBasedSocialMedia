@@ -17,7 +17,7 @@ public class UserPostDbAdapter implements UserPostPort
     private static final Logger logger = LogManager.getLogger(UserPostDbAdapter.class);
 
     @Override
-    public boolean isPremiumUser(int user_id) throws Exception
+    public boolean isPremiumUser(int user_id)
     {
         EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
 
@@ -32,7 +32,7 @@ public class UserPostDbAdapter implements UserPostPort
     }
 
     @Override
-    public UserPostResponse storePost(UserPost userPost) throws Exception
+    public UserPostResponse storePost(UserPost userPost)
     {
         EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
         RegisteredUsersEntity registeredUsersEntity = entityManager

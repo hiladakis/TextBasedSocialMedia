@@ -36,7 +36,7 @@ class FollowerControllerTest
     private static final Logger logger = LogManager.getLogger(FollowerControllerTest.class);
 
     @Test
-    void addFollowerSuccessTest() throws Exception
+    void addFollowerSuccessTest()
     {
         FollowerCommand newFollowerCommand = new FollowerCommand(1, 2, "add");
         followerService = new FollowerService(followerDbAdapter);
@@ -81,7 +81,7 @@ class FollowerControllerTest
     }
 
     @Test
-    void removeFollowerSuccessTest() throws Exception
+    void removeFollowerSuccessTest()
     {
         FollowerCommand newFollowerCommand = new FollowerCommand(1, 2, "remove");
         followerService = new FollowerService(followerDbAdapter);

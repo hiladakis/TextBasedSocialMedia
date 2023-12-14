@@ -6,5 +6,5 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.L
 public interface UserLoginPort
 {
     public Long getActiveUsersNum();
-    public LoginResponse loginUser(LoginUser loginUser) throws Exception;
+    public LoginResponse loginUser(LoginUser loginUser);
 }

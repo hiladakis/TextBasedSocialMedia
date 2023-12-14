@@ -4,6 +4,7 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.r
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.in.model.PostCommentCommand;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.in.PostCommentUseCase;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.out.PostCommentPort;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -17,15 +18,19 @@ public class PostCommentService implements PostCommentUseCase
     @Override
     public PostCommentResponse postComment(PostCommentCommand postCommentCommand) throws Exception
     {
-        if(isUserAllowedToPostComment(postCommentPort.isPremiumUser(postCommentCommand.getUserId()),
-                postCommentPort.getPostCommentsNumber(postCommentCommand.getPostId(), postCommentCommand.getUserId()),
-                postCommentCommand.getComment().length()))
+        PostCommentResponse postCommentResponse = DbUtils.inTransaction(entityManager ->
         {
-            return postCommentPort.storePostComment(postCommentCommand.getPostComment());
-        }
-        else{
-            return null;
-        }
+            if(isUserAllowedToPostComment(postCommentPort.isPremiumUser(postCommentCommand.getUserId()),
+                    postCommentPort.getPostCommentsNumber(postCommentCommand.getPostId(), postCommentCommand.getUserId()),
+                    postCommentCommand.getComment().length()))
+            {
+                return postCommentPort.storePostComment(postCommentCommand.getPostComment());
+            }
+            else{
+                return null;
+            }
+        });
+        return postCommentResponse;
     }
 
     private boolean isUserAllowedToPostComment(boolean isPremiumUser, int postCommentsNumber, int commentSize)

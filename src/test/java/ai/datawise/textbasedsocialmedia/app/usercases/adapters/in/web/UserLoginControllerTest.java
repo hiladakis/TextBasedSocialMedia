@@ -44,7 +44,7 @@ class UserLoginControllerTest
     private static final Logger logger = LogManager.getLogger(UserLoginControllerTest.class);
 
     @Test
-    void loginUserIntegrationSuccessTest() throws Exception
+    void loginUserIntegrationSuccessTest()
     {
         LoginResponse loginResponse = new LoginResponse(1,"giannis@example.com","Free");
         UserLoginCommand newUserLoginCommand = new UserLoginCommand("giannis@example.com", "12345");
@@ -96,7 +96,7 @@ class UserLoginControllerTest
     }
 
     @Test
-    void loginUserInputFailureTest() throws Exception
+    void loginUserInputFailureTest()
     {
         String username = "giannis";
         String password = "12345";

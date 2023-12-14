@@ -2,10 +2,11 @@ package ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence;
 
 import ai.datawise.textbasedsocialmedia.app.usercases.adapters.out.persistence.model.RegisteredUsersEntity;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.FollowUser;
+import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
+import ai.datawise.textbasedsocialmedia.appconfig.ConfigInstances;
 import jakarta.persistence.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -30,9 +31,8 @@ class FollowerDbAdapterTest
     @BeforeAll
     static void setUpAll() {
         try {
-            entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
+            entityManagerFactory = ConfigInstances.getEntityManagerFactory();
             followerDbAdapter = new FollowerDbAdapter();
-            followerDbAdapter.setEntityManagerFactory(entityManagerFactory);
         } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -41,7 +41,7 @@ class FollowerDbAdapterTest
             );
         }
 
-        try (EntityManager em = followerDbAdapter.getEntityManagerFactory().createEntityManager())
+        try (EntityManager em = entityManagerFactory.createEntityManager())
         {
             String queryStr = "SELECT id FROM giannis.registered_users WHERE username='" + follower1Username + "'";
             follower1UserId = (Integer) em.createNativeQuery(queryStr).getSingleResult();
@@ -64,36 +64,29 @@ class FollowerDbAdapterTest
         }
     }
 
-    @AfterAll
-    static void tearDownAll() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
-    }
-
     @Test
     void storeFollowersSuccessTest() throws Exception
     {
-        FollowUser followUser1 = new FollowUser(follower1UserId, followedUserId);
-        FollowUser followUser2 = new FollowUser(follower2UserId, followedUserId);
-        boolean follower1Res = followerDbAdapter.storeFollower(followUser1);
-        boolean follower2Res = followerDbAdapter.storeFollower(followUser2);
+        DbUtils.inTransaction(entityManager -> {
+            FollowUser followUser1 = new FollowUser(follower1UserId, followedUserId);
+            FollowUser followUser2 = new FollowUser(follower2UserId, followedUserId);
 
-        assertTrue(follower1Res);
-        assertTrue(follower2Res);
+            boolean follower1Res = followerDbAdapter.storeFollower(followUser1);
+            boolean follower2Res = followerDbAdapter.storeFollower(followUser2);
 
-        try (EntityManager em = followerDbAdapter.getEntityManagerFactory().createEntityManager())
-        {
+            assertTrue(follower1Res);
+            assertTrue(follower2Res);
+
             String queryStr;
             queryStr = "SELECT * FROM giannis.followers WHERE follower_user_id=" + follower1UserId
                     +" AND followed_user_id="+followedUserId;
 
-            Object [] result1 = (Object[]) em.createNativeQuery(queryStr).getSingleResult();
+            Object [] result1 = (Object[]) entityManager.createNativeQuery(queryStr).getSingleResult();
 
             queryStr = "SELECT * FROM giannis.followers WHERE follower_user_id=" + follower2UserId
                     +" AND followed_user_id="+followedUserId;
 
-            Object [] result2 = (Object[]) em.createNativeQuery(queryStr).getSingleResult();
+            Object [] result2 = (Object[]) entityManager.createNativeQuery(queryStr).getSingleResult();
 
             assertEquals(result1[1],follower1UserId);
             assertEquals(result1[2],followedUserId);
@@ -101,20 +94,20 @@ class FollowerDbAdapterTest
             assertEquals(result2[1],follower2UserId);
             assertEquals(result2[2],followedUserId);
 
-            RegisteredUsersEntity follower1 = em
+            RegisteredUsersEntity follower1 = entityManager
                     .find(RegisteredUsersEntity.class, follower1UserId);
 
-            RegisteredUsersEntity follower2 = em
+            RegisteredUsersEntity follower2 = entityManager
                     .find(RegisteredUsersEntity.class, follower2UserId);
 
-            RegisteredUsersEntity followed = em
+            RegisteredUsersEntity followed = entityManager
                     .find(RegisteredUsersEntity.class, followedUserId);
 
             assertEquals(0,follower1.getFollowersEntities().size());
             assertEquals(1,follower1.getFollowingEntities().size());
 
             String followedByFollower1Username = follower1.getFollowingEntities().get(0)
-                            .getFollowed().getUsername();
+                    .getFollowed().getUsername();
 
             assertEquals(followedUsername, followedByFollower1Username );
 
@@ -146,20 +139,13 @@ class FollowerDbAdapterTest
             String followedUsr2 = followed.getFollowersEntities().get(1)
                     .getFollowed().getUsername();
             assertEquals(followedUsername, followedUsr2 );
-        }
-        catch (Exception  t)
-        {
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n"))
-            );
-            throw t;
-        }
+            //delete followers added with this test
+            followerDbAdapter.deleteFollower(followUser1);
+            followerDbAdapter.deleteFollower(followUser2);
 
-        //delete followers added with this test
-        followerDbAdapter.deleteFollower(followUser1);
-        followerDbAdapter.deleteFollower(followUser2);
+            return true;
+        });
+
     }
 
     @Test
@@ -169,29 +155,34 @@ class FollowerDbAdapterTest
         FollowUser followUser2 = new FollowUser(follower2UserId, followedUserId);
 
         //store followers first, before deleting
-        followerDbAdapter.storeFollower(followUser1);
-        followerDbAdapter.storeFollower(followUser2);
+        DbUtils.inTransaction(entityManager -> {
+            followerDbAdapter.storeFollower(followUser1);
+            followerDbAdapter.storeFollower(followUser2);
+            return true;
+        });
 
-        boolean follower1Res = followerDbAdapter.deleteFollower(followUser1);
+        DbUtils.inTransaction(entityManager -> {
+            boolean follower1Res = followerDbAdapter.deleteFollower(followUser1);
+            assertTrue(follower1Res);
+            return true;
+        });
 
-        assertTrue(follower1Res);
-
-        try (EntityManager em = followerDbAdapter.getEntityManagerFactory().createEntityManager())
+        DbUtils.inTransaction(entityManager ->
         {
             assertThrows(NoResultException.class,
                     ()->{
                         final String queryStr = "SELECT * FROM giannis.followers WHERE follower_user_id=" + follower1UserId
                                 +" AND followed_user_id="+followedUserId;
-                        em.createNativeQuery(queryStr).getSingleResult();
+                        entityManager.createNativeQuery(queryStr).getSingleResult();
                     });
             //check that corresponding entities for followUser1 do not exist , while for followUser2 exist
-            RegisteredUsersEntity follower1 = em
+            RegisteredUsersEntity follower1 = entityManager
                     .find(RegisteredUsersEntity.class, follower1UserId);
 
-            RegisteredUsersEntity follower2 = em
+            RegisteredUsersEntity follower2 = entityManager
                     .find(RegisteredUsersEntity.class, follower2UserId);
 
-            RegisteredUsersEntity followed = em
+            RegisteredUsersEntity followed = entityManager
                     .find(RegisteredUsersEntity.class, followedUserId);
 
             assertEquals(0,follower1.getFollowersEntities().size());
@@ -203,20 +194,15 @@ class FollowerDbAdapterTest
             assertEquals(1, followed.getFollowersEntities().size());
             assertEquals(0,followed.getFollowingEntities().size());
 
-        }
-        catch (Exception  t)
-        {
-            logger.error(t + Arrays.asList(t.getStackTrace())
-                    .stream()
-                    .map(Objects::toString)
-                    .collect(Collectors.joining("\n"))
-            );
-            throw t;
-        }
+            return true;
+        });
 
         //delete second followUser entity as well
-        boolean follower2Res = followerDbAdapter.deleteFollower(followUser2);
-        assertTrue(follower2Res);
+        DbUtils.inTransaction(entityManager -> {
+            boolean follower2Res = followerDbAdapter.deleteFollower(followUser2);
+            assertTrue(follower2Res);
+            return true;
+        });
     }
 
 }

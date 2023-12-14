@@ -17,7 +17,7 @@ public class UserRegistrationDbAdapter implements UserRegistrationPort
     private static final Logger logger = LogManager.getLogger(UserRegistrationDbAdapter.class);
 
     @Override
-    public boolean storeRegisteredUser(User user) throws Exception
+    public boolean storeRegisteredUser(User user)
     {
         RegisteredUsersEntity usersEntity = getRegisteredUsersEntityFromUser(user);
         EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();

@@ -109,7 +109,7 @@ class PostCommentControllerTest
     }
 
     @Test
-    void postCommentControllerPostCommentLimitExceededTest() throws Exception
+    void postCommentControllerPostCommentLimitExceededTest()
     {
         PostCommentCommand newPostCommentCommand = new PostCommentCommand(2, 1,
                 "What a nice post you made there!");

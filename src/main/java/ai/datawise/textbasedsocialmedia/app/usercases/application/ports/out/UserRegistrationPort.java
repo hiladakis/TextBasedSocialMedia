@@ -4,5 +4,5 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.U
 
 public interface UserRegistrationPort
 {
-    public boolean storeRegisteredUser(User user) throws Exception;
+    public boolean storeRegisteredUser(User user);
 }

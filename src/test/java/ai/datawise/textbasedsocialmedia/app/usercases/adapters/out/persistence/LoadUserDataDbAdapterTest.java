@@ -10,7 +10,6 @@ import ai.datawise.textbasedsocialmedia.app.utils.DbUtils;
 import ai.datawise.textbasedsocialmedia.appconfig.ConfigInstances;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityTransaction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
@@ -58,9 +57,6 @@ class LoadUserDataDbAdapterTest
             userPostDbAdapter = new UserPostDbAdapter();
             postCommentDbAdapter = new PostCommentDbAdapter();
             loadUserDataDbAdapter = new LoadUserDataDbAdapter();
-            followerDbAdapter.setEntityManagerFactory(entityManagerFactory);
-            postCommentDbAdapter.setEntityManagerFactory(entityManagerFactory);
-            loadUserDataDbAdapter.setEntityManagerFactory(entityManagerFactory);
         } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -69,7 +65,7 @@ class LoadUserDataDbAdapterTest
             );
         }
 
-        try (EntityManager em = followerDbAdapter.getEntityManagerFactory().createEntityManager())
+        try (EntityManager em = entityManagerFactory.createEntityManager())
         {
             String queryStr = "SELECT id FROM giannis.registered_users WHERE username='" + follower1Username + "'";
             follower1UserId = (Integer) em.createNativeQuery(queryStr).getSingleResult();
@@ -82,8 +78,11 @@ class LoadUserDataDbAdapterTest
 
             followUser1 = new FollowUser(follower1UserId, followedUserId);
             followUser2 = new FollowUser(follower2UserId, followedUserId);
-            followerDbAdapter.storeFollower(followUser1);
-            followerDbAdapter.storeFollower(followUser2);
+            DbUtils.inTransaction(entityManager -> {
+                followerDbAdapter.storeFollower(followUser1);
+                followerDbAdapter.storeFollower(followUser2);
+                return true;
+            });
             //first post made by follower1
             userPost = new UserPost(follower1UserId, postText);
             UserPostResponse userPostResponse = DbUtils.
@@ -95,9 +94,13 @@ class LoadUserDataDbAdapterTest
             postComment2 = new PostComment(postId, follower2UserId, postCommentText2);
             postComment3 = new PostComment(postId, followedUserId, postCommentText3);
 
-            postCommentDbAdapter.storePostComment(postComment);
-            postCommentDbAdapter.storePostComment(postComment2);
-            postCommentDbAdapter.storePostComment(postComment3);
+            DbUtils.inTransaction(entityManager ->
+            {
+                postCommentDbAdapter.storePostComment(postComment);
+                postCommentDbAdapter.storePostComment(postComment2);
+                postCommentDbAdapter.storePostComment(postComment3);
+                return true;
+            });
             //second post made by followed user
             userPost2 = new UserPost(followedUserId, post2Text);
             UserPostResponse userPostResponse2 =
@@ -107,8 +110,12 @@ class LoadUserDataDbAdapterTest
             post2Comment = new PostComment(postId2, follower2UserId, post2CommentText);
             post2Comment2 = new PostComment(postId2, followedUserId, post2CommentText2);
 
-            postCommentDbAdapter.storePostComment(post2Comment);
-            postCommentDbAdapter.storePostComment(post2Comment2);
+            DbUtils.inTransaction(entityManager ->
+            {
+                postCommentDbAdapter.storePostComment(post2Comment);
+                postCommentDbAdapter.storePostComment(post2Comment2);
+                return true;
+            });
             //third post made by followed user
             userPost3 = new UserPost(followedUserId, post3Text);
             UserPostResponse userPostResponse3 =
@@ -116,14 +123,14 @@ class LoadUserDataDbAdapterTest
 
             postId3 = userPostResponse3.getPostId();
             post3Comment = new PostComment(postId3, follower1UserId, post3CommentText);
-            postCommentDbAdapter.storePostComment(post3Comment);
+            DbUtils.inTransaction(entityManager -> postCommentDbAdapter.storePostComment(post3Comment));
             //fourth post made by followed user
             userPost4 = new UserPost(followedUserId, post4Text);
             UserPostResponse userPostResponse4 =
                     DbUtils.inTransaction(entityManager -> userPostDbAdapter.storePost(userPost4));
             postId4 = userPostResponse4.getPostId();
             post4Comment = new PostComment(postId4, follower1UserId, post4CommentText);
-            postCommentDbAdapter.storePostComment(post4Comment);
+            DbUtils.inTransaction(entityManager -> postCommentDbAdapter.storePostComment(post4Comment));
         }
         catch (Exception  t)
         {
@@ -137,142 +144,163 @@ class LoadUserDataDbAdapterTest
     }
 
     @AfterAll
-    static void tearDownAll() throws Exception {
-        followerDbAdapter.deleteFollower(followUser1);
-        followerDbAdapter.deleteFollower(followUser2);
+    static void tearDownAll() throws Exception
+    {
+        DbUtils.inTransaction(entityManager ->
+        {
+            followerDbAdapter.deleteFollower(followUser1);
+            followerDbAdapter.deleteFollower(followUser2);
 
-        EntityTransaction entityTransaction = null;
+            UserPostsEntity userPostsEntity1 = entityManager.find(UserPostsEntity.class, postId);
+            entityManager.remove(userPostsEntity1);
+            UserPostsEntity userPostsEntity2 = entityManager.find(UserPostsEntity.class, postId2);
+            entityManager.remove(userPostsEntity2);
+            UserPostsEntity userPostsEntity3 = entityManager.find(UserPostsEntity.class, postId3);
+            entityManager.remove(userPostsEntity3);
+            UserPostsEntity userPostsEntity4 = entityManager.find(UserPostsEntity.class, postId4);
+            entityManager.remove(userPostsEntity4);
 
-        try (EntityManager em = entityManagerFactory.createEntityManager()) {
-            entityTransaction = em.getTransaction();
-            entityTransaction.begin();
-
-            UserPostsEntity userPostsEntity1 = em.find(UserPostsEntity.class, postId);
-            em.remove(userPostsEntity1);
-            UserPostsEntity userPostsEntity2 = em.find(UserPostsEntity.class, postId2);
-            em.remove(userPostsEntity2);
-            UserPostsEntity userPostsEntity3 = em.find(UserPostsEntity.class, postId3);
-            em.remove(userPostsEntity3);
-            UserPostsEntity userPostsEntity4 = em.find(UserPostsEntity.class, postId4);
-            em.remove(userPostsEntity4);
-            em.flush();
-            entityTransaction.commit();
-        } catch (Exception  e) {
-            if (entityTransaction != null && entityTransaction.isActive()) {
-                entityTransaction.rollback();
-            }
-        }
+            return true;
+        });
     }
 
 
     @Test
     void getFollowingPostsSuccessTest() throws Exception
     {
-        List<FollowerPostView> followerPostViewList = loadUserDataDbAdapter.getFollowingPosts(follower1UserId);
-        assertEquals(3, followerPostViewList.size());
-        //reverse chronological order
-        assertTrue(followerPostViewList.get(0).getPostDate().
-                compareTo(followerPostViewList.get(1).getPostDate())>0);
-        assertTrue(followerPostViewList.get(1).getPostDate().
-                compareTo(followerPostViewList.get(2).getPostDate())>0);
+        DbUtils.inTransaction(entityManager ->
+        {
+            List<FollowerPostView> followerPostViewList = loadUserDataDbAdapter.getFollowingPosts(follower1UserId);
+            assertEquals(3, followerPostViewList.size());
+            //reverse chronological order
+            assertTrue(followerPostViewList.get(0).getPostDate().
+                    compareTo(followerPostViewList.get(1).getPostDate())>0);
+            assertTrue(followerPostViewList.get(1).getPostDate().
+                    compareTo(followerPostViewList.get(2).getPostDate())>0);
 
-        assertEquals(followedUsername, followerPostViewList.get(0).getFollowerName());
+            assertEquals(followedUsername, followerPostViewList.get(0).getFollowerName());
+            return true;
+        });
     }
 
     @Test
     void getUserPostAndLatestCommentsSuccessTest() throws Exception
     {
-        UserPostWithLatestCommentsView userPostWithLatestCommentsView =
-                loadUserDataDbAdapter.getUserPostAndLatestComments(postId3);
-        assertEquals(followedUsername, userPostWithLatestCommentsView.getPostUser());
-        assertEquals(post3Text, userPostWithLatestCommentsView.getText());
-        assertEquals(1, userPostWithLatestCommentsView.getLatestComments().size());
-        assertEquals(post3CommentText,userPostWithLatestCommentsView.getLatestComments().get(0).getComment());
+        DbUtils.inTransaction(entityManager ->
+        {
+            UserPostWithLatestCommentsView userPostWithLatestCommentsView =
+                    loadUserDataDbAdapter.getUserPostAndLatestComments(postId3);
+            assertEquals(followedUsername, userPostWithLatestCommentsView.getPostUser());
+            assertEquals(post3Text, userPostWithLatestCommentsView.getText());
+            assertEquals(1, userPostWithLatestCommentsView.getLatestComments().size());
+            assertEquals(post3CommentText,userPostWithLatestCommentsView.getLatestComments().get(0).getComment());
 
-        UserPostWithLatestCommentsView userPostWithLatestCommentsView2 =
-                loadUserDataDbAdapter.getUserPostAndLatestComments(postId);
-        assertEquals(follower1Username, userPostWithLatestCommentsView2.getPostUser());
-        assertEquals(3, userPostWithLatestCommentsView2.getLatestComments().size());
-        //test reverse chronological order
-        assertTrue(userPostWithLatestCommentsView2.getLatestComments().get(0).getCommentDate().
-                compareTo(userPostWithLatestCommentsView2.getLatestComments().get(1).getCommentDate() )> 0);
-        assertTrue(userPostWithLatestCommentsView2.getLatestComments().get(1).getCommentDate().
-                compareTo(userPostWithLatestCommentsView2.getLatestComments().get(2).getCommentDate() )> 0);
+            UserPostWithLatestCommentsView userPostWithLatestCommentsView2 =
+                    loadUserDataDbAdapter.getUserPostAndLatestComments(postId);
+            assertEquals(follower1Username, userPostWithLatestCommentsView2.getPostUser());
+            assertEquals(3, userPostWithLatestCommentsView2.getLatestComments().size());
+            //test reverse chronological order
+            assertTrue(userPostWithLatestCommentsView2.getLatestComments().get(0).getCommentDate().
+                    compareTo(userPostWithLatestCommentsView2.getLatestComments().get(1).getCommentDate() )> 0);
+            assertTrue(userPostWithLatestCommentsView2.getLatestComments().get(1).getCommentDate().
+                    compareTo(userPostWithLatestCommentsView2.getLatestComments().get(2).getCommentDate() )> 0);
+            return true;
+        });
     }
 
     @Test
     void getAllPostCommentsSuccessTest() throws Exception
     {
-        List<PostCommentView> postCommentViewList = loadUserDataDbAdapter.getAllPostComments(postId);
-        assertEquals(3, postCommentViewList.size());
+        DbUtils.inTransaction(entityManager ->
+        {
+            List<PostCommentView> postCommentViewList = loadUserDataDbAdapter.getAllPostComments(postId);
+            assertEquals(3, postCommentViewList.size());
+            return true;
+        });
     }
 
     @Test
     void getLatestCommentsOnAllUserOrFollowingPostsSuccessTest() throws Exception
     {
-        List<PostCommentView> postCommentViewList = loadUserDataDbAdapter.
-                getLatestCommentsOnAllUserOrFollowingPosts(follower1UserId);
-        assertEquals(7, postCommentViewList.size());
-        //test reverse chronological order
-        assertTrue(postCommentViewList.get(0).getCommentDate().
-                compareTo(postCommentViewList.get(1).getCommentDate())>0);
-        assertTrue(postCommentViewList.get(1).getCommentDate().
-                compareTo(postCommentViewList.get(2).getCommentDate())>0);
-        assertTrue(postCommentViewList.get(2).getCommentDate().
-                compareTo(postCommentViewList.get(3).getCommentDate())>0);
-        assertTrue(postCommentViewList.get(3).getCommentDate().
-                compareTo(postCommentViewList.get(4).getCommentDate())>0);
-        assertTrue(postCommentViewList.get(4).getCommentDate().
-                compareTo(postCommentViewList.get(5).getCommentDate())>0);
-        assertTrue(postCommentViewList.get(5).getCommentDate().
-                compareTo(postCommentViewList.get(6).getCommentDate())>0);
+        DbUtils.inTransaction(entityManager ->
+        {
+            List<PostCommentView> postCommentViewList = loadUserDataDbAdapter.
+                    getLatestCommentsOnAllUserOrFollowingPosts(follower1UserId);
+            assertEquals(7, postCommentViewList.size());
+            //test reverse chronological order
+            assertTrue(postCommentViewList.get(0).getCommentDate().
+                    compareTo(postCommentViewList.get(1).getCommentDate())>0);
+            assertTrue(postCommentViewList.get(1).getCommentDate().
+                    compareTo(postCommentViewList.get(2).getCommentDate())>0);
+            assertTrue(postCommentViewList.get(2).getCommentDate().
+                    compareTo(postCommentViewList.get(3).getCommentDate())>0);
+            assertTrue(postCommentViewList.get(3).getCommentDate().
+                    compareTo(postCommentViewList.get(4).getCommentDate())>0);
+            assertTrue(postCommentViewList.get(4).getCommentDate().
+                    compareTo(postCommentViewList.get(5).getCommentDate())>0);
+            assertTrue(postCommentViewList.get(5).getCommentDate().
+                    compareTo(postCommentViewList.get(6).getCommentDate())>0);
+            return true;
+        });
+
     }
 
     @Test
     void getFollowerListSuccessTest() throws Exception
     {
-        List<FollowerView> followerViewList = loadUserDataDbAdapter.getFollowerList(followedUserId);
-        assertEquals(2, followerViewList.size());
+        DbUtils.inTransaction(entityManager ->
+        {
+            List<FollowerView> followerViewList = loadUserDataDbAdapter.getFollowerList(followedUserId);
+            assertEquals(2, followerViewList.size());
 
-        List<FollowerView> followerViewList2 = loadUserDataDbAdapter.getFollowerList(follower1UserId);
-        assertEquals(0, followerViewList2.size());
+            List<FollowerView> followerViewList2 = loadUserDataDbAdapter.getFollowerList(follower1UserId);
+            assertEquals(0, followerViewList2.size());
 
-        List<FollowerView> followerViewList3 = loadUserDataDbAdapter.getFollowerList(follower2UserId);
-        assertEquals(0, followerViewList3.size());
+            List<FollowerView> followerViewList3 = loadUserDataDbAdapter.getFollowerList(follower2UserId);
+            assertEquals(0, followerViewList3.size());
 
+            return true;
+        });
     }
 
     @Test
     void getFollowingListSuccessTest() throws Exception
     {
-        List<FollowerView> followingViewList = loadUserDataDbAdapter.getFollowingList(follower1UserId);
-        assertEquals(1, followingViewList.size());
-        assertEquals(followedUsername, followingViewList.get(0).getUsername());
+        DbUtils.inTransaction(entityManager ->
+        {
+            List<FollowerView> followingViewList = loadUserDataDbAdapter.getFollowingList(follower1UserId);
+            assertEquals(1, followingViewList.size());
+            assertEquals(followedUsername, followingViewList.get(0).getUsername());
 
-        List<FollowerView> followingViewList2 = loadUserDataDbAdapter.getFollowingList(follower2UserId);
-        assertEquals(1, followingViewList2.size());
-        assertEquals(followedUsername, followingViewList2.get(0).getUsername());
+            List<FollowerView> followingViewList2 = loadUserDataDbAdapter.getFollowingList(follower2UserId);
+            assertEquals(1, followingViewList2.size());
+            assertEquals(followedUsername, followingViewList2.get(0).getUsername());
 
-        List<FollowerView> followingViewList3 = loadUserDataDbAdapter.getFollowingList(followedUserId);
-        assertEquals(0, followingViewList3.size());
+            List<FollowerView> followingViewList3 = loadUserDataDbAdapter.getFollowingList(followedUserId);
+            assertEquals(0, followingViewList3.size());
+            return true;
+        });
     }
 
     @Test
     public void getUsersByUsernameStrSuccessTest() throws Exception
     {
-        String usernameStr = "hill";
-        List<UserView> userViewList = loadUserDataDbAdapter.getUsersByUsernameStr(usernameStr);
-        assertEquals(4, userViewList.size());
+        DbUtils.inTransaction(entityManager ->
+        {
+            String usernameStr = "hill";
+            List<UserView> userViewList = loadUserDataDbAdapter.getUsersByUsernameStr(usernameStr);
+            assertEquals(4, userViewList.size());
 
-        Predicate<UserView> usernamePredicate = userView -> userView
-                .getUsername().contains(usernameStr);
+            Predicate<UserView> usernamePredicate = userView -> userView
+                    .getUsername().contains(usernameStr);
 
-        String userViewListStr = userViewList.stream().filter(usernamePredicate).toList().toString();
+            String userViewListStr = userViewList.stream().filter(usernamePredicate).toList().toString();
 
-        assertTrue(userViewListStr.contains("john.hill@gmail.com"));
-        assertTrue(userViewListStr.contains("jack.hill@gmail.com"));
-        assertTrue(userViewListStr.contains("jane.hill@gmail.com"));
-        assertTrue(userViewListStr.contains("george.hill@example.com"));
+            assertTrue(userViewListStr.contains("john.hill@gmail.com"));
+            assertTrue(userViewListStr.contains("jack.hill@gmail.com"));
+            assertTrue(userViewListStr.contains("jane.hill@gmail.com"));
+            assertTrue(userViewListStr.contains("george.hill@example.com"));
+            return true;
+        });
     }
-
 }

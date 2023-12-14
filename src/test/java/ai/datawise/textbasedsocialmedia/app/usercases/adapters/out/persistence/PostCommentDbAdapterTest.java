@@ -43,7 +43,6 @@ class PostCommentDbAdapterTest {
             entityManagerFactory = ConfigInstances.getEntityManagerFactory();
             userPostDbAdapter = new UserPostDbAdapter();
             postCommentDbAdapter = new PostCommentDbAdapter();
-            postCommentDbAdapter.setEntityManagerFactory(entityManagerFactory);
         } catch (Exception  t) {
             logger.error(t + Arrays.asList(t.getStackTrace())
                     .stream()
@@ -102,32 +101,39 @@ class PostCommentDbAdapterTest {
 
     @Test
     void isPremiumUserTest() throws Exception{
-        boolean isPremiumUser1 = postCommentDbAdapter.isPremiumUser(userId);
-        boolean isPremiumUser2 = postCommentDbAdapter.isPremiumUser(userIdPremium);
-        assertFalse(isPremiumUser1);
-        assertTrue(isPremiumUser2);
+        DbUtils.inTransaction(entityManager -> {
+            boolean isPremiumUser1 = postCommentDbAdapter.isPremiumUser(userId);
+            boolean isPremiumUser2 = postCommentDbAdapter.isPremiumUser(userIdPremium);
+            assertFalse(isPremiumUser1);
+            assertTrue(isPremiumUser2);
+            return true;
+        });
     }
 
 
     @Test
     void storePostCommentSuccessTest() throws Exception{
-        PostCommentResponse postCommentResponse = postCommentDbAdapter.storePostComment(postComment);
-        assertNotNull(postCommentResponse);
-        assertTrue(postCommentResponse.getPostCommentId() > 0);
-        assertNotNull(postCommentResponse.getCommentDate());
+        DbUtils.inTransaction(entityManager ->
+        {
+            PostCommentResponse postCommentResponse = postCommentDbAdapter.storePostComment(postComment);
+            assertNotNull(postCommentResponse);
+            assertTrue(postCommentResponse.getPostCommentId() > 0);
+            assertNotNull(postCommentResponse.getCommentDate());
 
-        PostCommentResponse postCommentResponse2 = postCommentDbAdapter.storePostComment(postComment2);
-        assertNotNull(postCommentResponse2);
-        assertTrue(postCommentResponse2.getPostCommentId() > 0);
-        assertNotNull(postCommentResponse2.getCommentDate());
+            PostCommentResponse postCommentResponse2 = postCommentDbAdapter.storePostComment(postComment2);
+            assertNotNull(postCommentResponse2);
+            assertTrue(postCommentResponse2.getPostCommentId() > 0);
+            assertNotNull(postCommentResponse2.getCommentDate());
 
-        PostCommentResponse postCommentResponse3 = postCommentDbAdapter.storePostComment(postComment3);
-        assertNotNull(postCommentResponse3);
-        assertTrue(postCommentResponse3.getPostCommentId() > 0);
-        assertNotNull(postCommentResponse3.getCommentDate());
+            PostCommentResponse postCommentResponse3 = postCommentDbAdapter.storePostComment(postComment3);
+            assertNotNull(postCommentResponse3);
+            assertTrue(postCommentResponse3.getPostCommentId() > 0);
+            assertNotNull(postCommentResponse3.getCommentDate());
 
-        assertEquals(1, postCommentDbAdapter.getPostCommentsNumber(postId, userId));
-        assertEquals(2, postCommentDbAdapter.getPostCommentsNumber(postId, userIdPremium));
+            assertEquals(1, postCommentDbAdapter.getPostCommentsNumber(postId, userId));
+            assertEquals(2, postCommentDbAdapter.getPostCommentsNumber(postId, userIdPremium));
+            return true;
+        });
 
         try (EntityManager em = entityManagerFactory.createEntityManager())
         {

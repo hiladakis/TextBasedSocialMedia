@@ -43,7 +43,7 @@ class LoadUserDataControllerTest
     private static final Logger logger = LogManager.getLogger(LoadUserDataControllerTest.class);
 
     @Test
-    void getFollowingPostsSuccessTest() throws Exception
+    void getFollowingPostsSuccessTest()
     {
         int userId = 1;
         List<FollowerPostView> followerPostViewList = new ArrayList<>();
@@ -92,7 +92,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getUserPostAndLatestCommentsSuccessTest() throws Exception
+    void getUserPostAndLatestCommentsSuccessTest()
     {
         int postId = 1;
         UserPostWithLatestCommentsView userPostWithLatestCommentsView = new UserPostWithLatestCommentsView( 1,
@@ -151,7 +151,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getAllPostCommentsSuccessTest() throws Exception
+    void getAllPostCommentsSuccessTest()
     {
         int postId = 1;
         List<PostCommentView> postCommentViewList = new ArrayList<>();
@@ -205,7 +205,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getLatestCommentsOnAllUserOrFollowingPostsSuccessTest() throws Exception
+    void getLatestCommentsOnAllUserOrFollowingPostsSuccessTest()
     {
         int userId = 1;
         List<PostCommentView> postCommentViewList = new ArrayList<>();
@@ -261,7 +261,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getFollowerListSuccessTest() throws Exception
+    void getFollowerListSuccessTest()
     {
         int userId = 1;
         List<FollowerView> followerViewList = new ArrayList<>();
@@ -309,7 +309,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getFollowingListSuccessTest() throws Exception
+    void getFollowingListSuccessTest()
     {
         int userId = 1;
         List<FollowerView> followingViewList = new ArrayList<>();
@@ -356,7 +356,7 @@ class LoadUserDataControllerTest
     }
 
     @Test
-    void getUsersSuccessTest() throws Exception
+    void getUsersSuccessTest()
     {
         String usernameStr = "jane";
         List<UserView> userViewList = new ArrayList<>();

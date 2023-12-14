@@ -11,7 +11,6 @@ public class ConfigInstances
 {
     @Getter
     private static final EntityManagerFactory entityManagerFactory;
-
     static
     {
         entityManagerFactory = Persistence.createEntityManagerFactory("persistenceUnit");
@@ -41,7 +40,6 @@ public class ConfigInstances
     public static PostCommentController getPostCommentControllerInstance()
     {
         PostCommentDbAdapter postCommentDbAdapter = new PostCommentDbAdapter();
-        postCommentDbAdapter.setEntityManagerFactory(entityManagerFactory);
         PostCommentService postCommentService = new PostCommentService(postCommentDbAdapter);
         return new PostCommentController(postCommentService);
     }
@@ -49,7 +47,6 @@ public class ConfigInstances
     public static FollowerController getFollowerControllerInstance()
     {
         FollowerDbAdapter followerDbAdapter = new FollowerDbAdapter();
-        followerDbAdapter.setEntityManagerFactory(entityManagerFactory);
         FollowerService followerService = new FollowerService(followerDbAdapter);
         return new FollowerController(followerService);
     }
@@ -57,7 +54,6 @@ public class ConfigInstances
     public static LoadUserDataController getLoadUserDataControllerInstance()
     {
         LoadUserDataDbAdapter loadUserDataDbAdapter = new LoadUserDataDbAdapter();
-        loadUserDataDbAdapter.setEntityManagerFactory(entityManagerFactory);
         LoadUserDataService loadUserDataService = new LoadUserDataService(loadUserDataDbAdapter);
         return new LoadUserDataController(loadUserDataService);
     }
