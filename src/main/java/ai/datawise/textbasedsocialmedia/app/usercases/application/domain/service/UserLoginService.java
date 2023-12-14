@@ -1,5 +1,6 @@
 package ai.datawise.textbasedsocialmedia.app.usercases.application.domain.service;
 
+import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.LoginUser;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.responses.LoginResponse;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.in.model.UserLoginCommand;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.ports.in.UserLoginUseCase;
@@ -12,17 +13,16 @@ import javax.naming.LimitExceededException;
 @RequiredArgsConstructor
 public class UserLoginService implements UserLoginUseCase
 {
-    private static final int activeUsersMaxNum = 500;
-
     private final UserLoginPort userLoginPort;
 
     @Override
     public LoginResponse loginUser(UserLoginCommand command) throws Exception
     {
         LoginResponse loginResponse = DbUtils.inTransaction(entityManager -> {
-            if(userLoginPort.getActiveUsersNum() < activeUsersMaxNum)
+            LoginUser loginUser = command.getLoginUser();
+            if(!loginUser.isActiveUsersNumExceeded(userLoginPort.getActiveUsersNum()))
             {
-                return(userLoginPort.loginUser(command.getLoginUser()));
+                return(userLoginPort.loginUser(loginUser));
             }
             throw new LimitExceededException("Active users number is 500 or more");
         });
