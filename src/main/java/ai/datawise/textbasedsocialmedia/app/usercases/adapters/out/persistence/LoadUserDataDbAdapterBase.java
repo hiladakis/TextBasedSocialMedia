@@ -8,6 +8,8 @@ import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.v
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.views.PostCommentView;
 import ai.datawise.textbasedsocialmedia.app.usercases.application.domain.model.views.UserPostWithLatestCommentsView;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -17,64 +19,51 @@ import java.util.stream.Stream;
 class LoadUserDataDbAdapterBase
 {
     protected void addFollowerPostsToPostViewList(List<FollowerPostView> followerPostViewList,
-                                                List<UserPostsEntity> followerPosts)
+                                                List<Object[]> followerPosts)
     {
-        Iterator<UserPostsEntity> userPostsIterator = followerPosts.iterator();
+        Iterator<Object[]> userPostsIterator = followerPosts.iterator();
         while(userPostsIterator.hasNext())
         {
-            FollowerPostView followerPostView = getFollowerPostViewFromUserPostsEntity(userPostsIterator.next());
+            Object[] userPost = userPostsIterator.next();
+            int postId = (int)userPost[0];
+            Timestamp postDate = (Timestamp)userPost[1];
+            String text = (String)userPost[2];
+            String followerName = (String)userPost[3];
+            FollowerPostView followerPostView = new FollowerPostView(postId,postDate,
+                    text,followerName);
             followerPostViewList.add(followerPostView);
         }
     }
 
-    protected List<PostCommentView> addFollowingPostsToPostCommentViewList(List<PostCommentView> followingPostCommentViewList,
-                                                                         List<UserPostsEntity> followingPosts)
-    {
-        List<PostCommentView> resultList = followingPostCommentViewList;
-        Iterator<UserPostsEntity> followingPostsIterator = followingPosts.iterator();
-        while(followingPostsIterator.hasNext())
-        {
-            List<PostCommentView> postCommentViewList = getPostCommentViewListFromUserPostsEntity(followingPostsIterator
-                    .next());
-            resultList = Stream.of(resultList, postCommentViewList)
-                    .flatMap(Collection::stream).toList();
-        }
-        return resultList;
-    }
-
-
-    protected FollowerPostView getFollowerPostViewFromUserPostsEntity(UserPostsEntity userPostsEntity)
-    {
-        return new FollowerPostView(userPostsEntity.getId(), userPostsEntity.getPostDate(),
-                userPostsEntity.getText(), userPostsEntity.getRegisteredUsersEntity().getUsername());
-
-    }
-
-    protected UserPostWithLatestCommentsView getUserPostWithLatestCommentsView(UserPostsEntity userPostsEntity)
-    {
-        return new UserPostWithLatestCommentsView(userPostsEntity.getId(), userPostsEntity.getPostDate(),
-                userPostsEntity.getRegisteredUsersEntity().getUsername(), userPostsEntity.getText());
-    }
-
-    protected PostCommentView getPostCommentViewFromPostCommentsEntity(PostCommentsEntity postCommentsEntity)
-    {
-        return new PostCommentView(postCommentsEntity.getId(), postCommentsEntity.getCommentDate(),
-                postCommentsEntity.getCommentUser(), postCommentsEntity.getComment());
-    }
-
-    protected List<PostCommentView> getPostCommentViewListFromUserPostsEntity(UserPostsEntity userPostsEntity)
+    protected List<PostCommentView> getPostCommentViewListFromQuery( List<Object[]> postCommentList )
     {
         List<PostCommentView> postCommentViewList = new ArrayList<>();
-
-        Iterator<PostCommentsEntity> postCommentsEntityIterator = userPostsEntity.getPostComments().
-                iterator();
-
-        while(postCommentsEntityIterator.hasNext())
+        Iterator<Object[]> postCommentListIterator = postCommentList.iterator();
+        while(postCommentListIterator.hasNext())
         {
-            PostCommentsEntity postCommentsEntity = postCommentsEntityIterator.next();
-            postCommentViewList.add(getPostCommentViewFromPostCommentsEntity(postCommentsEntity));
+            Object[] postComment = postCommentListIterator.next();
+            int postCommentId = (int)postComment[0];
+            Timestamp postCommentDate = (Timestamp) postComment[1];
+            String postCommentUser = (String) postComment[2];
+            String comment = (String) postComment[3];
+            postCommentViewList.add(new PostCommentView(postCommentId,
+                    postCommentDate,postCommentUser,comment));
         }
         return postCommentViewList;
+    }
+
+    protected UserPostWithLatestCommentsView
+        getUserPostWithLatestCommentsViewFromQuery(List<Object[]> resultPost, List<PostCommentView> postCommentViewList)
+    {
+        Object[] userPost = resultPost.get(0);
+        int postId = (int)userPost[0];
+        Timestamp postDate = (Timestamp) userPost[1];
+        String postUser = (String) userPost[2];
+        String text = (String) userPost[3];
+        UserPostWithLatestCommentsView userPostWithLatestCommentsView =
+                new UserPostWithLatestCommentsView(postId,postDate,postUser,text);
+        userPostWithLatestCommentsView.setLatestComments(postCommentViewList);
+        return userPostWithLatestCommentsView;
     }
 
     protected List<FollowerView> getFollowerViewListFromFollowersEntities(List<FollowersEntity> followersEntityList)

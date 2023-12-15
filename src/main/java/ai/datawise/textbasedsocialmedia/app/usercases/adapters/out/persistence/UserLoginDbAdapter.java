@@ -26,21 +26,14 @@ public class UserLoginDbAdapter implements UserLoginPort
     @Override
     public LoginResponse loginUser(LoginUser loginUser)
     {
-        try
+        EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
+        RegisteredUsersEntity registeredUsersEntity = matchUserCredentials(loginUser, entityManager);
+        if( registeredUsersEntity != null)
         {
-            EntityManager entityManager = DbUtils.getEntityManagerThreadLocal().get();
-            RegisteredUsersEntity registeredUsersEntity = matchUserCredentials(loginUser, entityManager);
-            if( registeredUsersEntity != null)
-            {
-                AuthenticatedUsersEntity authEntity = getAuthUsersEntityFromRegisteredUser(registeredUsersEntity);
-                entityManager.persist(authEntity);
-                return new LoginResponse(registeredUsersEntity.getId(), registeredUsersEntity.getUsername(),
-                        registeredUsersEntity.getRole());
-            }
-        }
-        catch (Exception t)
-        {
-            throw t;
+            AuthenticatedUsersEntity authEntity = getAuthUsersEntityFromRegisteredUser(registeredUsersEntity);
+            entityManager.persist(authEntity);
+            return new LoginResponse(registeredUsersEntity.getId(), registeredUsersEntity.getUsername(),
+                    registeredUsersEntity.getRole());
         }
         return null;
     }
